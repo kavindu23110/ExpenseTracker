@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-manrope), var(--font-sinhala), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), var(--font-sinhala), monospace;
+  --color-ground: #f3f5f7;
+  --color-ink: #111827;
+  --color-ink-2: #374151;
+  --color-muted: #4b5563;
+  --color-line: #dde2e8;
+  --color-line-soft: #eef0f2;
+  --color-field: #c9d1d9;
+  --color-soft: #f1f3f5;
+  --color-accent: #0f766e;
+  --color-accent-soft: #e6f4f1;
+  --color-accent-ink: #134e4a;
+  --color-warn: #9a3412;
+  --color-warn-soft: #ffedd5;
+  --color-si: #7c2d12;
+}
+
+body {
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+button,
+label[data-file] {
+  cursor: pointer;
+}
+
+/* Phones: text boxes stay 16px so the browser doesn't zoom in, and forms fill the width. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  form > label {
+    flex: 1 1 40%;
+  }
+
+  form > label > input,
+  form > label > select {
+    width: 100%;
+  }
+
+  form > button {
+    flex: 1 1 100%;
+  }
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px #ccebe6;
+}
+
+button:focus-visible,
+a:focus-visible,
+label[data-file]:focus-within {
+  outline: 3px solid #99d5cc;
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+a:hover {
+  color: #115e59;
+}
+
+@keyframes sweep {
+  0%,
+  100% {
+    top: 0;
+  }
+  50% {
+    top: calc(100% - 3px);
+  }
+}
+
+.scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-accent);
+  opacity: 0.75;
+  animation: sweep 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanline {
+    animation: none;
+  }
+}

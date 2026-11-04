@@ -1,0 +1,38 @@
+name: expense-tracker
+
+services:
+  api:
+    build: backend
+    restart: always
+    environment:
+      # The SQL Server installed on this machine.
+      ConnectionStrings__Default: Server=host.docker.internal,1433;Database=ExpenseTracker;User ID=expense_app;Password=${SQL_PASSWORD:?Set SQL_PASSWORD in .env};TrustServerCertificate=True
+      Database__ApplyMigrationsOnStartup: "true"
+      Claude__UseCli: "true"
+      Auth__SecureCookie: "false"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - claude-signin:/home/app/.claude
+
+  web:
+    build:
+      context: frontend
+      args:
+        API_URL: http://api:8080
+    restart: always
+    depends_on:
+      - api
+    networks:
+      default:
+      # Reached like DDoc: through its tunnel, by this address, on devices with WARP on.
+      ddoc:
+        ipv4_address: 172.30.0.50
+
+networks:
+  ddoc:
+    external: true
+    name: ddoc-hosted_ddoc-hosted
+
+volumes:
+  claude-signin:
