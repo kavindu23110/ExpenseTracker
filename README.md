@@ -43,6 +43,8 @@ Hosted the same way as DDoc: private, with no host ports, and reached only throu
 3. Sign Claude Code in, once: `docker compose exec -it api claude`, then `/login`.
 4. Create the owner account straight away, because the first visitor becomes the owner.
 
+To deploy code changes later, run `redeploy.cmd`.
+
 Bills, including their images, live in the local `ExpenseTracker` database, so back that up. The Claude sign-in is kept in a Docker volume. If this PC is off or asleep, or Docker isn't running, nobody can reach the site.
 
 ## Household features
