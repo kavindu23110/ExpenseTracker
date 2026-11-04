@@ -184,6 +184,10 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("WhatsAppNumber")
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -354,6 +358,40 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                     b.HasKey("Month");
 
                     b.ToTable("ToBuyMonthlyFills");
+                });
+
+            modelBuilder.Entity("ExpenseTracker.Domain.Household.WhatsAppConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AccessToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AppSecret")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumberId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("VerifyToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WhatsAppConfigs");
+                });
+
+            modelBuilder.Entity("ExpenseTracker.Domain.Household.WhatsAppMessage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WhatsAppMessages");
                 });
 
             modelBuilder.Entity("ExpenseTracker.Domain.PriceWatch.InflationRate", b =>

@@ -11,6 +11,21 @@ public class BillRulesTests
         new(lang, merchant, merchantSi, null, null, null, new DateOnly(2026, 11, 3), null, null, null, null, items, []);
 
     [Fact]
+    public void Editing_replaces_the_values_and_forgets_an_old_shop_translation()
+    {
+        var bill = Bill.Create(Content("si", "Shop", "සාප්පුව", new BillItem("Tea", 1, 5)), "Shop", new DateOnly(2026, 11, 1), 5, BillCategory.Other, false, null);
+
+        bill.Edit(" New Shop ", new DateOnly(2026, 10, 2), 40, [new BillItem("Rice", 2, 20)]);
+
+        Assert.Equal("New Shop", bill.Merchant);
+        Assert.Null(bill.MerchantSi);
+        Assert.Equal(new DateOnly(2026, 10, 2), bill.Date);
+        Assert.Equal(40, bill.Amount);
+        Assert.Equal("Rice", Assert.Single(bill.Items).Name);
+        Assert.Throws<DomainException>(() => bill.Edit("Shop", new DateOnly(2026, 10, 2), 40, []));
+    }
+
+    [Fact]
     public void Changing_category_rejects_a_blank_one()
     {
         var bill = Bill.Create(new BillContent(BillLanguage.English, "Shop", null, null, null, null, new DateOnly(2026, 11, 1), null, null, null, null, [new BillItem("Tea", 1, 5)], []), "Shop", new DateOnly(2026, 11, 1), 5, BillCategory.Other, false, null);

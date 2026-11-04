@@ -32,6 +32,9 @@ public sealed record BillDetailDto(
     IReadOnlyList<BillItemDto> Items, IReadOnlyList<BillChargeDto> Charges);
 
 /// <summary>A category suggestion as sent over the API.</summary>
+public sealed record EditBillRequest(string Merchant, string? Date, decimal Amount, IReadOnlyList<BillItemDto> Items);
+
+/// <summary>A new category for a saved bill.</summary>
 public sealed record ChangeBillCategoryRequest(string? Category);
 
 /// <summary>A suggested category.</summary>

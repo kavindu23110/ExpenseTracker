@@ -28,6 +28,13 @@ public sealed class PantryItem
     /// <summary>Changes the quantity, stopping at zero.</summary>
     public void Adjust(decimal change) => Qty = Math.Max(0, Qty + change);
 
+    /// <summary>Sets the quantity to an exact amount.</summary>
+    public void SetQty(decimal qty)
+    {
+        if (qty < 0) throw new DomainException("Quantity cannot be negative.");
+        Qty = qty;
+    }
+
     /// <summary>Marks the item as finished.</summary>
     public void UseUp() => Qty = 0;
 }

@@ -20,6 +20,9 @@ public interface IBillRepository
     /// <summary>Saves a bill and, when given, the category to remember for its shop.</summary>
     Task AddAsync(Bill bill, string? categoryToRemember, CancellationToken ct);
 
+    /// <summary>Saves a change to a bill; false when there is no such bill.</summary>
+    Task<bool> UpdateAsync(int id, Action<Bill> change, CancellationToken ct);
+
     /// <summary>Changes a saved bill's category and remembers it for the shop; false when there is no such bill.</summary>
     Task<bool> ChangeCategoryAsync(int id, string category, CancellationToken ct);
 }

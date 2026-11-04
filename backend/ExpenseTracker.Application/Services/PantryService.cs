@@ -77,6 +77,16 @@ public sealed class PantryService(IStore<PantryItem> pantry, IStore<ShoppingItem
         return true;
     }
 
+    /// <summary>Sets an item's exact quantity; at zero it goes on the shopping list. False when missing.</summary>
+    public async Task<bool> SetQtyAsync(int id, decimal qty, CancellationToken ct)
+    {
+        if (await pantry.FindAsync(id, ct) is not { } item) return false;
+        item.SetQty(qty);
+        if (item.IsOut) await AddToListAsync(item.Key, item.Name, ct);
+        await pantry.SaveAsync(ct);
+        return true;
+    }
+
     /// <summary>Marks an item finished and puts it on the shopping list. False when missing.</summary>
     public async Task<bool> UseUpAsync(int id, CancellationToken ct)
     {

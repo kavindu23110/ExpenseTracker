@@ -45,11 +45,21 @@ Hosted the same way as DDoc: private, with no host ports, and reached only throu
 
 To deploy code changes later, run `redeploy.cmd`.
 
+### Bills by WhatsApp
+
+Household members send a photo or PDF to the WhatsApp Business number; the app reads it, saves it straight away and replies. Duplicates are refused, and numbers not linked under Household are ignored.
+
+1. In Meta for Developers, create a Business app with the WhatsApp product and a phone number.
+2. Under Settings, signed in as the owner, enter a verify token (any long random text you choose), the app secret, a permanent System User access token and the phone number ID. Values saved there are encrypted and replace any `WHATSAPP_*` values in `.env`.
+3. Give the tunnel a public hostname with HTTPS. Limit it to the path `^/api/whatsapp/webhook$` and point it at `http://172.30.0.50:3000`, so nothing else in the app becomes public.
+4. In the Meta app, set the callback URL to `https://<hostname>/api/whatsapp/webhook` with the same verify token, and subscribe to `messages`.
+5. Under Household, the owner enters each member's WhatsApp number.
+
 Bills, including their images, live in the local `ExpenseTracker` database, so back that up. The Claude sign-in is kept in a Docker volume. If this PC is off or asleep, or Docker isn't running, nobody can reach the site.
 
 ## Household features
 
-The first visit creates the owner account; the owner adds members under Household. Everyone shares the same data. Tabs cover budgets, recurring bills, savings goals, your own price history, pantry and shopping list, and pasted bank SMS.
+The first visit creates the owner account; the owner adds members under Household. Everyone shares the same data. Tabs cover budgets, recurring bills, savings goals, your own price history, pantry and shopping list.
 
 ## Restart
 

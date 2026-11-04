@@ -1,5 +1,5 @@
 import { ApiError } from "@/lib/api";
-import type { Member, Pantry, Planning, PriceHistoryRow, Session, SmsDraft, ToBuySuggestion } from "./types";
+import type { Member, Pantry, Planning, PriceHistoryRow, Session, Statistics, ToBuySuggestion, WhatsAppStatus } from "./types";
 
 async function call<T>(url: string, method = "GET", body?: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -17,6 +17,13 @@ async function call<T>(url: string, method = "GET", body?: unknown): Promise<T> 
 
 /** Calls the sign-in and household routes. */
 export const householdApi = {
+  linkWhatsApp: (id: number, number: string) => call<void>(`/api/auth/members/${id}/whatsapp`, "PUT", { number }),
+  whatsAppStatus: () => call<WhatsAppStatus>("/api/settings/whatsapp"),
+  saveWhatsAppConfig: (config: { verifyToken: string; appSecret: string; accessToken: string; phoneNumberId: string }) => call<void>("/api/settings/whatsapp", "PUT", config),
+  clearWhatsAppConfig: () => call<void>("/api/settings/whatsapp", "DELETE"),
+  whatsAppCheck: () => call<{ ok: boolean; message: string }>("/api/settings/whatsapp/check", "POST"),
+  whatsAppTestMessage: (number: string) => call<{ ok: boolean; message: string }>("/api/settings/whatsapp/test-message", "POST", { number }),
+  statistics: () => call<Statistics>("/api/statistics"),
   session: () => call<Session>("/api/auth/session"),
   setup: (name: string, password: string) => call<Member>("/api/auth/setup", "POST", { name, password }),
   login: (name: string, password: string) => call<Member>("/api/auth/login", "POST", { name, password }),
@@ -41,6 +48,7 @@ export const householdApi = {
   pantry: () => call<Pantry>("/api/pantry"),
   addPantry: (name: string, qty: number, unit: string) => call<void>("/api/pantry", "POST", { name, qty, unit }),
   adjustPantry: (id: number, change: number) => call<void>(`/api/pantry/${id}/adjust`, "POST", { change }),
+  setPantryQty: (id: number, qty: number) => call<void>(`/api/pantry/${id}/qty`, "PUT", { qty }),
   useUpPantry: (id: number) => call<void>(`/api/pantry/${id}/use-up`, "POST"),
   removePantry: (id: number) => call<void>(`/api/pantry/${id}`, "DELETE"),
   toBuySuggestions: () => call<ToBuySuggestion[]>("/api/shopping/suggestions"),
@@ -50,7 +58,4 @@ export const householdApi = {
   setShoppingDone: (id: number, done: boolean) => call<void>(`/api/shopping/${id}`, "PUT", { done }),
   setShoppingAmount: (id: number, qty: number | null, unit: string) => call<void>(`/api/shopping/${id}/amount`, "PUT", { qty, unit }),
   removeShopping: (id: number) => call<void>(`/api/shopping/${id}`, "DELETE"),
-
-  smsPreview: (text: string) => call<SmsDraft[]>("/api/sms/preview", "POST", { text }),
-  smsImport: (items: SmsDraft[]) => call<{ added: number }>("/api/sms/import", "POST", { items }),
 };

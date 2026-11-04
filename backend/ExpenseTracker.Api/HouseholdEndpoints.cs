@@ -3,7 +3,7 @@ using ExpenseTracker.Application.Services;
 
 namespace ExpenseTracker.Api;
 
-/// <summary>Routes for budgets, goals, recurring bills, prices, pantry and bank messages.</summary>
+/// <summary>Routes for budgets, goals, recurring bills, prices and pantry.</summary>
 public static class HouseholdEndpoints
 {
     /// <summary>Maps the routes under a protected group.</summary>
@@ -20,11 +20,13 @@ public static class HouseholdEndpoints
         api.MapPost("/recurring/{id:int}/pay", async (int id, PayBillRequest r, PlanningService s, CancellationToken ct) => Done(await s.PayAsync(id, r.Amount, ct)));
         api.MapDelete("/recurring/{id:int}", async (int id, PlanningService s, CancellationToken ct) => Done(await s.RemoveRecurringAsync(id, ct)));
 
+        api.MapGet("/statistics", (StatisticsService s, CancellationToken ct) => s.GetAsync(ct));
         api.MapGet("/prices", (PriceHistoryService s, CancellationToken ct) => s.GetAsync(ct));
 
         api.MapGet("/pantry", (PantryService s, CancellationToken ct) => s.GetAsync(ct));
         api.MapPost("/pantry", async (AddPantryRequest r, PantryService s, CancellationToken ct) => { await s.AddAsync(r, ct); return Results.NoContent(); });
         api.MapPost("/pantry/{id:int}/adjust", async (int id, AdjustPantryRequest r, PantryService s, CancellationToken ct) => Done(await s.AdjustAsync(id, r.Change, ct)));
+        api.MapPut("/pantry/{id:int}/qty", async (int id, SetPantryQtyRequest r, PantryService s, CancellationToken ct) => Done(await s.SetQtyAsync(id, r.Qty, ct)));
         api.MapPost("/pantry/{id:int}/use-up", async (int id, PantryService s, CancellationToken ct) => Done(await s.UseUpAsync(id, ct)));
         api.MapDelete("/pantry/{id:int}", async (int id, PantryService s, CancellationToken ct) => Done(await s.RemoveAsync(id, ct)));
         api.MapGet("/shopping/suggestions", (PantryService s, CancellationToken ct) => s.GetSuggestionsAsync(ct));
@@ -35,8 +37,6 @@ public static class HouseholdEndpoints
         api.MapPut("/shopping/{id:int}/amount", async (int id, SetShoppingAmountRequest r, PantryService s, CancellationToken ct) => Done(await s.SetShoppingAmountAsync(id, r.Qty, r.Unit, ct)));
         api.MapDelete("/shopping/{id:int}", async (int id, PantryService s, CancellationToken ct) => Done(await s.RemoveShoppingAsync(id, ct)));
 
-        api.MapPost("/sms/preview", (SmsPreviewRequest r, SmsImportService s, CancellationToken ct) => s.PreviewAsync(r.Text, ct));
-        api.MapPost("/sms/import", async (SmsImportRequest r, SmsImportService s, CancellationToken ct) => Results.Ok(new { added = await s.ImportAsync(r.Items, ct) }));
     }
 
     private static IResult Done(bool found) => found ? Results.NoContent() : Results.NotFound();

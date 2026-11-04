@@ -3,14 +3,18 @@ using ExpenseTracker.Application;
 using ExpenseTracker.Application.Services;
 using ExpenseTracker.Infrastructure;
 using ExpenseTracker.Infrastructure.Seed;
+using ExpenseTracker.Domain.Household;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.Channels;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<BillOptions>(builder.Configuration.GetSection(BillOptions.Section));
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddSingleton(Channel.CreateUnbounded<WhatsAppInbound>());
+builder.Services.AddHostedService<WhatsAppWorker>();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>
@@ -51,6 +55,7 @@ app.UseRateLimiter();
 app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapBillEndpoints();
+app.MapWhatsAppEndpoints();
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 app.Run();

@@ -35,6 +35,16 @@ public sealed class BillRepository(AppDbContext db) : IBillRepository
     }
 
     /// <inheritdoc />
+    public async Task<bool> UpdateAsync(int id, Action<Bill> change, CancellationToken ct)
+    {
+        var bill = await db.Bills.FirstOrDefaultAsync(b => b.Id == id, ct);
+        if (bill is null) return false;
+        change(bill);
+        await db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    /// <inheritdoc />
     public async Task<bool> ChangeCategoryAsync(int id, string category, CancellationToken ct)
     {
         var bill = await db.Bills.FirstOrDefaultAsync(b => b.Id == id, ct);

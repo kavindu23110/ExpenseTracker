@@ -55,6 +55,16 @@ public sealed class AuthService(IStore<AppUser> users, IPasswordHasher<AppUser> 
         return true;
     }
 
+    /// <summary>Links a member's WhatsApp number, refusing one another member uses. False when missing.</summary>
+    public async Task<bool> LinkWhatsAppAsync(int id, string? number, CancellationToken ct)
+    {
+        if (await users.FindAsync(id, ct) is not { } user) return false;
+        user.LinkWhatsApp(number);
+        if (user.WhatsAppNumber is not null && (await users.ListAsync(ct)).Any(u => u.Id != id && u.WhatsAppNumber == user.WhatsAppNumber)) throw new DomainException("Another member already uses that number.");
+        await users.SaveAsync(ct);
+        return true;
+    }
+
     private async Task<MemberDto> CreateAsync(CredentialsRequest r, bool isOwner, CancellationToken ct)
     {
         AppUser.CheckPassword(r.Password);
@@ -69,5 +79,5 @@ public sealed class AuthService(IStore<AppUser> users, IPasswordHasher<AppUser> 
     private async Task<AppUser?> FindByNameAsync(string? name, CancellationToken ct) =>
         (await users.ListAsync(ct)).FirstOrDefault(u => string.Equals(u.Name, name?.Trim(), StringComparison.OrdinalIgnoreCase));
 
-    private static MemberDto ToDto(AppUser u) => new(u.Id, u.Name, u.IsOwner);
+    private static MemberDto ToDto(AppUser u) => new(u.Id, u.Name, u.IsOwner, u.WhatsAppNumber);
 }

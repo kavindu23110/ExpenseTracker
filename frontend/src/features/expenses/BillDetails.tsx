@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { SelectField } from "@/components/ui/Field";
 import { api } from "@/lib/api";
 import { money2, num2, qtyLabel, shortDate } from "@/lib/format";
+import { BillEditForm } from "./BillEditForm";
 import { ItemName } from "./ItemName";
 
 const TH = "px-1 pt-1.5 pb-2 font-bold border-b border-line";
@@ -37,8 +38,10 @@ function CategoryPicker({ id, value, categories }: { id: number; value: string; 
 /** The full contents of one bill. */
 export function BillDetails({ id, categories, onClose }: { id: number; categories: string[]; onClose: () => void }) {
   const { data: b, isError } = useQuery({ queryKey: ["bill", id], queryFn: () => api.bill(id) });
+  const [editing, setEditing] = useState(false);
   if (isError) return <Card label="Bill details"><p role="alert" className="text-sm text-warn">This bill could not be loaded.</p></Card>;
   if (!b) return <Card label="Bill details"><p role="status" className="text-sm text-muted">Loading bill…</p></Card>;
+  if (editing) return <Card label="Edit bill" className="gap-4"><h2 className="text-xl font-extrabold">Edit bill</h2><BillEditForm bill={b} onDone={() => setEditing(false)} /></Card>;
   const isSi = b.lang === "si";
   const fileUrl = `/api/bills/${b.id}/file`;
   return (
@@ -53,7 +56,10 @@ export function BillDetails({ id, categories, onClose }: { id: number; categorie
           {isSi && b.merchantSi && <p lang="si" className="text-base font-semibold">{b.merchantSi}</p>}
           <p className="text-sm text-muted">{b.address}</p>
         </div>
-        <button type="button" onClick={onClose} aria-label="Close bill details" className="flex size-11 flex-none items-center justify-center rounded-[10px] border border-line bg-white text-ink-2"><X size={18} aria-hidden /></button>
+        <span className="flex flex-none gap-2">
+          <button type="button" onClick={() => setEditing(true)} className="min-h-11 rounded-[10px] border border-field bg-white px-3.5 text-sm font-semibold">Edit</button>
+          <button type="button" onClick={onClose} aria-label="Close bill details" className="flex size-11 flex-none items-center justify-center rounded-[10px] border border-line bg-white text-ink-2"><X size={18} aria-hidden /></button>
+        </span>
       </div>
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">

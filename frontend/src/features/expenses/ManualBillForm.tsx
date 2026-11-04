@@ -15,7 +15,7 @@ const localToday = () => {
 
 const lineTotal = (l: typeof EMPTY_LINE) => (parseFloat(l.qty) || 0) * (parseFloat(l.price) || 0);
 
-/** Files a bill typed in by hand; the total follows the lines unless the user enters their own. */
+/** Files a bill typed in by hand; the total is always worked out from the lines. */
 export function ManualBillForm({ categories, onCancel, onSaved }: {
   categories: string[];
   onCancel: () => void;
@@ -25,7 +25,6 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
   const [date, setDate] = useState(localToday);
   const [category, setCategory] = useState(categories[0] ?? "Other");
   const [lines, setLines] = useState([EMPTY_LINE]);
-  const [total, setTotal] = useState("");
   const queryClient = useQueryClient();
   const [added, setAdded] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState<string | null>(null);
@@ -39,8 +38,7 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
       queryClient.invalidateQueries({ queryKey: ["planning"] });
     },
   });
-  const computed = lines.reduce((sum, l) => sum + lineTotal(l), 0);
-  const amount = total.trim() ? parseFloat(total) || 0 : computed;
+  const amount = Math.round(lines.reduce((sum, l) => sum + lineTotal(l), 0) * 100) / 100;
   const setLine = (index: number, patch: Partial<typeof EMPTY_LINE>) => setLines(lines.map((l, i) => (i === index ? { ...l, ...patch } : l)));
 
   const save = useMutation({
@@ -85,10 +83,7 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
       ))}
       <button type="button" onClick={() => setLines([...lines, EMPTY_LINE])} className="min-h-11 self-start rounded-[10px] border border-field bg-white px-4 text-sm font-semibold">Add another item</button>
 
-      <div className="flex flex-wrap items-end justify-between gap-3 border-t border-line pt-3">
-        <TextField id="m-total" label="Total on the bill (optional)" type="number" min="0" step="any" mono placeholder={computed.toFixed(2)} value={total} onChange={(e) => setTotal(e.target.value)} />
-        <p className="text-lg font-extrabold">Total <span className="font-mono">{money2(amount)}</span></p>
-      </div>
+      <p className="flex justify-between gap-3 border-t border-line pt-3 text-lg font-extrabold">Total <span className="font-mono">{money2(amount)}</span></p>
       {save.isError && <p role="alert" className="rounded-[10px] bg-warn-soft px-4 py-3 text-sm font-semibold text-warn">{save.error.message}</p>}
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={save.isPending}>{save.isPending ? "Saving…" : "Save bill"}</Button>

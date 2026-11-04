@@ -39,6 +39,9 @@ public static class BillEndpoints
             return Results.Created($"/api/bills/{id}", new { id });
         });
 
+        api.MapPut("/bills/{id:int}", async (int id, EditBillRequest r, IBillFilingService s, CancellationToken ct) =>
+            await s.EditAsync(id, r, ct) ? Results.NoContent() : Results.NotFound());
+
         api.MapPut("/bills/{id:int}/category", async (int id, ChangeBillCategoryRequest r, IBillFilingService s, CancellationToken ct) =>
             await s.ChangeCategoryAsync(id, r.Category, ct) ? Results.NoContent() : Results.NotFound());
 

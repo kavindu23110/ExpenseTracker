@@ -10,6 +10,11 @@ services:
       Database__ApplyMigrationsOnStartup: "true"
       Claude__UseCli: "true"
       Auth__SecureCookie: "false"
+      # Optional: leave these out of .env to keep the WhatsApp number switched off.
+      WhatsApp__VerifyToken: ${WHATSAPP_VERIFY_TOKEN:-}
+      WhatsApp__AppSecret: ${WHATSAPP_APP_SECRET:-}
+      WhatsApp__AccessToken: ${WHATSAPP_ACCESS_TOKEN:-}
+      WhatsApp__PhoneNumberId: ${WHATSAPP_PHONE_NUMBER_ID:-}
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:

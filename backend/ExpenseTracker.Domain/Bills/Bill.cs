@@ -34,6 +34,21 @@ public sealed class Bill
     public IReadOnlyList<BillItem> Items => _items;
     public IReadOnlyList<BillCharge> Charges => _charges;
 
+    /// <summary>Corrects the shop, date, total and items; charges stay as they are.</summary>
+    public void Edit(string merchant, DateOnly? date, decimal amount, IReadOnlyCollection<BillItem> items)
+    {
+        if (string.IsNullOrWhiteSpace(merchant)) throw new DomainException("Enter the shop name.");
+        if (date is null) throw new DomainException("Enter the bill date.");
+        if (amount < 0) throw new DomainException("The total cannot be negative.");
+        if (items.Count == 0) throw new DomainException("A bill needs at least one line item.");
+        if (merchant.Trim() != Merchant) MerchantSi = null;
+        Merchant = merchant.Trim();
+        Date = date.Value;
+        Amount = Money.Round(amount);
+        _items.Clear();
+        _items.AddRange(items);
+    }
+
     /// <summary>Moves the bill to another category.</summary>
     public void ChangeCategory(string category)
     {

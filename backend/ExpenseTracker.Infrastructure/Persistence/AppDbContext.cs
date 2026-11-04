@@ -15,6 +15,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<LearnedMerchant> LearnedMerchants => Set<LearnedMerchant>();
     public DbSet<ItemMapping> ItemMappings => Set<ItemMapping>();
     public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<WhatsAppMessage> WhatsAppMessages => Set<WhatsAppMessage>();
+    public DbSet<WhatsAppConfig> WhatsAppConfigs => Set<WhatsAppConfig>();
     public DbSet<ToBuyMonthlyFill> ToBuyMonthlyFills => Set<ToBuyMonthlyFill>();
     public DbSet<CustomCategory> CustomCategories => Set<CustomCategory>();
     public DbSet<SavingsGoal> SavingsGoals => Set<SavingsGoal>();
@@ -138,10 +140,24 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.Unit).HasMaxLength(20);
         });
 
+        b.Entity<WhatsAppConfig>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.Property(x => x.PhoneNumberId).HasMaxLength(50);
+        });
+
+        b.Entity<WhatsAppMessage>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasMaxLength(200);
+        });
+
         b.Entity<AppUser>(e =>
         {
             e.Property(x => x.Name).HasMaxLength(50);
             e.Property(x => x.PasswordHash).HasMaxLength(500);
+            e.Property(x => x.WhatsAppNumber).HasMaxLength(15);
             e.HasIndex(x => x.Name).IsUnique();
         });
 

@@ -25,6 +25,17 @@ public sealed class BillFilingService(IBillRepository bills, PantryService pantr
     }
 
     /// <inheritdoc />
+    public async Task<bool> EditAsync(int id, EditBillRequest r, CancellationToken ct)
+    {
+        var date = ParseDate(r.Date);
+        var preview = await bills.FindAsync(id, ct);
+        if (preview is null) return false;
+        preview.Edit(r.Merchant, date, r.Amount, r.Items.Select(i => i.ToDomain()).ToList());
+        if ((await bills.GetAllAsync(ct)).Any(b => b.Id != id && b.IsDuplicateOf(preview))) throw new DomainException($"This would match a bill already saved: {preview.Merchant}, {preview.Date:yyyy-MM-dd}.");
+        return await bills.UpdateAsync(id, b => b.Edit(r.Merchant, date, r.Amount, r.Items.Select(i => i.ToDomain()).ToList()), ct);
+    }
+
+    /// <inheritdoc />
     public async Task<bool> ChangeCategoryAsync(int id, string? category, CancellationToken ct)
     {
         await categories.RequireAsync(category, ct);

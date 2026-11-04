@@ -29,6 +29,8 @@ export const api = {
   },
   decideItems: (keys: string[], same: boolean) =>
     request<void>("/api/item-mappings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keys, same }) }),
+  editBill: (id: number, bill: unknown) =>
+    request<void>(`/api/bills/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(bill) }),
   changeBillCategory: (id: number, category: string) =>
     request<void>(`/api/bills/${id}/category`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ category }) }),
   bill: (id: number) => request<BillDetail>(`/api/bills/${id}`),

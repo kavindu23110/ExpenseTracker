@@ -7,18 +7,20 @@ import { MembersPage } from "./MembersPage";
 import { PantryPage } from "./PantryPage";
 import { PlanningPage } from "./PlanningPage";
 import { PricesPage } from "./PricesPage";
-import { SmsImportPage } from "./SmsImportPage";
+import { SettingsPage } from "./SettingsPage";
+import { StatisticsPage } from "./StatisticsPage";
 import { ToBuyPage } from "./ToBuyPage";
 import type { Member } from "./types";
 
 const TABS = [
   { id: "expenses", name: "Expenses" },
+  { id: "statistics", name: "Statistics" },
   { id: "planning", name: "Budgets & bills" },
   { id: "prices", name: "Prices" },
   { id: "tobuy", name: "To buy" },
   { id: "pantry", name: "Pantry" },
-  { id: "sms", name: "Bank SMS" },
   { id: "members", name: "Household" },
+  { id: "settings", name: "Settings" },
 ];
 
 const PHONE_TABS = [
@@ -32,6 +34,7 @@ const MORE_TABS = TABS.filter((t) => !PHONE_TABS.some((p) => p.id === t.id));
 /** The navigation between the app's pages. */
 export function HomeTabs({ user }: { user: Member }) {
   const [tab, setTab] = useState("expenses");
+  const tabs = TABS.filter((t) => t.id !== "settings" || user.isOwner);
   const [moreOpen, setMoreOpen] = useState(false);
   const open = (id: string) => {
     setTab(id);
@@ -46,7 +49,7 @@ export function HomeTabs({ user }: { user: Member }) {
     <>
       <nav aria-label="Main" className="hidden border-b border-line bg-white px-6 sm:block">
         <div className="mx-auto flex max-w-[1280px] gap-1 overflow-x-auto py-2">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button key={t.id} type="button" aria-current={tab === t.id ? "page" : undefined} onClick={() => open(t.id)} className={`inline-flex min-h-11 flex-none items-center gap-2 rounded-[10px] px-3.5 text-sm ${tab === t.id ? "bg-ink font-bold text-white" : "font-semibold text-ink-2"}`}>
               {t.name}
               {t.id === "tobuy" && toBuy > 0 && <span aria-label={`${toBuy} items to buy`} className="rounded-full bg-soft px-1.5 text-xs font-bold text-ink">{toBuy}</span>}
@@ -58,7 +61,7 @@ export function HomeTabs({ user }: { user: Member }) {
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] sm:hidden">
         {moreOpen && (
           <div className="flex flex-col border-b border-line p-2">
-            {MORE_TABS.map((t) => <button key={t.id} type="button" aria-current={tab === t.id ? "page" : undefined} onClick={() => open(t.id)} className={`min-h-12 rounded-[10px] px-4 text-left text-[15px] ${tab === t.id ? "bg-ink font-bold text-white" : "font-semibold text-ink-2"}`}>{t.name}</button>)}
+            {MORE_TABS.filter((t) => t.id !== "settings" || user.isOwner).map((t) => <button key={t.id} type="button" aria-current={tab === t.id ? "page" : undefined} onClick={() => open(t.id)} className={`min-h-12 rounded-[10px] px-4 text-left text-[15px] ${tab === t.id ? "bg-ink font-bold text-white" : "font-semibold text-ink-2"}`}>{t.name}</button>)}
           </div>
         )}
         <div className="grid grid-cols-5">
@@ -80,11 +83,12 @@ export function HomeTabs({ user }: { user: Member }) {
       {tab !== "expenses" && (
         <main className="min-h-screen px-4 pt-5 pb-28 sm:px-6 sm:pt-8 sm:pb-16">
           <div className="mx-auto flex max-w-[1280px] flex-col gap-6">
+            {tab === "statistics" && <StatisticsPage />}
+            {tab === "settings" && user.isOwner && <SettingsPage />}
             {tab === "planning" && <PlanningPage />}
             {tab === "prices" && <PricesPage />}
             {tab === "tobuy" && <ToBuyPage />}
             {tab === "pantry" && <PantryPage />}
-            {tab === "sms" && <SmsImportPage />}
             {tab === "members" && <MembersPage user={user} />}
           </div>
         </main>

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -6,6 +6,19 @@ import { householdApi } from "./householdApi";
 import type { Member } from "./types";
 import { BUTTON, HEADING, INPUT, LABEL, PRIMARY } from "./ui";
 import { useSaveAction } from "./useSaveAction";
+
+function WhatsAppLink({ member }: { member: Member }) {
+  const [number, setNumber] = useState(member.whatsAppNumber ?? "");
+  const queryClient = useQueryClient();
+  const save = useSaveAction(() => householdApi.linkWhatsApp(member.id, number), () => queryClient.invalidateQueries({ queryKey: ["members"] }));
+  return (
+    <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); save.run(undefined); }}>
+      <label className={LABEL}>{member.name}&apos;s WhatsApp number<input inputMode="tel" autoComplete="off" placeholder="94771234567" value={number} onChange={(e) => setNumber(e.target.value)} className={INPUT} /></label>
+      <button type="submit" disabled={save.busy} className={BUTTON}>Save number</button>
+      {save.error && <p role="alert" className="w-full text-sm font-semibold text-warn">{save.error}</p>}
+    </form>
+  );
+}
 
 /** Who shares this app; the owner adds and removes members. */
 export function MembersPage({ user }: { user: Member }) {
@@ -34,6 +47,7 @@ export function MembersPage({ user }: { user: Member }) {
             {user.isOwner && !m.isOwner && <button type="button" disabled={remove.busy} onClick={() => { if (window.confirm(`Remove ${m.name} from the household?`)) remove.run(m.id); }} className={BUTTON}>Remove</button>}
           </div>
         ))}
+        {user.isOwner && data?.map((m) => <WhatsAppLink key={m.id} member={m} />)}
         {user.isOwner && (
           <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); add.run(undefined); }}>
             <label className={LABEL}>Name<input required autoComplete="off" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={INPUT} /></label>

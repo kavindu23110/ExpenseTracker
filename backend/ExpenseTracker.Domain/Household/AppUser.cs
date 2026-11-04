@@ -20,11 +20,20 @@ public sealed class AppUser
     public string Name { get; private set; }
     public string PasswordHash { get; private set; }
     public bool IsOwner { get; private set; }
+    public string? WhatsAppNumber { get; private set; }
 
     /// <summary>Checks a password meets the minimum before it is hashed.</summary>
     public static void CheckPassword(string? password)
     {
         if (string.IsNullOrEmpty(password) || password.Length < MinPasswordLength) throw new DomainException($"Use a password of at least {MinPasswordLength} characters.");
+    }
+
+    /// <summary>Links the number this member sends bills from; blank unlinks it.</summary>
+    public void LinkWhatsApp(string? number)
+    {
+        var digits = WhatsAppWebhook.NormaliseNumber(number);
+        if (digits.Length is > 0 and (< 8 or > 15)) throw new DomainException("Enter the WhatsApp number with its country code.");
+        WhatsAppNumber = digits.Length == 0 ? null : digits;
     }
 
     /// <summary>Stores a stronger hash of the same password.</summary>

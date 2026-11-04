@@ -1,5 +1,5 @@
 /** A household member. */
-export interface Member { id: number; name: string; isOwner: boolean }
+export interface Member { id: number; name: string; isOwner: boolean; whatsAppNumber: string | null }
 
 /** The sign-in state. */
 export interface Session { needsSetup: boolean; user: Member | null }
@@ -36,4 +36,19 @@ export interface Pantry {
 }
 
 /** A payment found in a bank message. */
-export interface SmsDraft { amount: number; merchant: string; date: string; category: string; reference: string; alreadyImported: boolean }
+
+/** One line of a statistics breakdown. */
+export interface StatisticsRow {
+  name: string;
+  nameSi: string | null;
+  amount: number;
+}
+
+/** The statistics page. */
+export interface Statistics {
+  averagePerMonth: number | null;
+  months: { month: string; total: number; billCount: number; categories: StatisticsRow[]; shops: StatisticsRow[]; items: StatisticsRow[] }[];
+}
+
+/** The WhatsApp section of the settings page. */
+export interface WhatsAppStatus { configured: boolean; settings: { name: string; present: boolean }[]; linkedMembers: number; lastReceived: string | null }

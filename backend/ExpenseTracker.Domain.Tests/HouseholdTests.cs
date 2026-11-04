@@ -75,33 +75,6 @@ public class HouseholdTests
     }
 
     [Fact]
-    public void Sms_reads_a_card_purchase_and_ignores_the_balance()
-    {
-        var p = Assert.Single(BankSmsParser.Parse("Purchase of LKR 1,250.50 at KEELLS SUPER on 03/11/2026 using card ending 1234. Avl Bal LKR 50,000.00"));
-
-        Assert.Equal(1250.50m, p.Amount);
-        Assert.Equal("KEELLS SUPER", p.Merchant);
-        Assert.Equal(new DateOnly(2026, 11, 3), p.Date);
-    }
-
-    [Theory]
-    [InlineData("Your OTP for the transaction of LKR 500.00 is 123456")]
-    [InlineData("LKR 5,000.00 credited to your account")]
-    [InlineData("Transaction of LKR 900.00 at ABC was declined")]
-    [InlineData("Hello, your statement is ready")]
-    public void Sms_skips_messages_that_are_not_payments(string message) => Assert.Empty(BankSmsParser.Parse(message));
-
-    [Fact]
-    public void Sms_keeps_unknown_shops_and_gives_the_same_message_the_same_reference()
-    {
-        const string message = "Rs. 300 debited from your account";
-        var payments = BankSmsParser.Parse($"{message}\n{message}");
-
-        Assert.Null(payments[0].Merchant);
-        Assert.Equal(payments[0].Reference, payments[1].Reference);
-    }
-
-    [Fact]
     public void Price_history_needs_two_purchases_and_finds_the_rise_and_best_shop()
     {
         var history = PriceHistory.Build([
@@ -213,6 +186,72 @@ public class HouseholdTests
         };
 
         Assert.Equal(500, ToBuySuggestions.LastMonthTotal(bills, Today));
+    }
+
+    [Fact]
+    public void Statistics_show_six_months_and_average_only_finished_ones()
+    {
+        var bills = new[]
+        {
+            BillOn("2026-09-05", "Shop", new BillItem("Rice", 1, 100)),
+            BillOn("2026-10-05", "Shop", new BillItem("Rice", 1, 300)),
+            BillOn("2026-11-02", "Shop", new BillItem("Rice", 1, 9000)),
+        };
+
+        var months = SpendingStatistics.Months(bills, Today);
+
+        Assert.Equal(6, months.Count);
+        Assert.Equal(new DateOnly(2026, 6, 1), months[0].Month);
+        Assert.Equal(9000, months[^1].Total);
+        Assert.Equal(200, SpendingStatistics.AverageOfFinishedMonths(months));
+    }
+
+    [Fact]
+    public void Statistics_have_no_average_before_a_month_has_finished()
+    {
+        var months = SpendingStatistics.Months([BillOn("2026-11-02", "Shop", new BillItem("Rice", 1, 50))], Today);
+
+        Assert.Null(SpendingStatistics.AverageOfFinishedMonths(months));
+    }
+
+    [Fact]
+    public void Pantry_quantity_can_be_set_but_not_negative()
+    {
+        var item = new PantryItem("rice", "Rice", 5, "kg");
+
+        item.SetQty(2.5m);
+
+        Assert.Equal(2.5m, item.Qty);
+        Assert.Throws<DomainException>(() => item.SetQty(-1));
+    }
+
+    [Theory]
+    [InlineData("077 123 4567", "94771234567")]
+    [InlineData("+94 77 123-4567", "94771234567")]
+    public void WhatsApp_numbers_match_how_the_service_reports_them(string typed, string expected) => Assert.Equal(expected, WhatsAppWebhook.NormaliseNumber(typed));
+
+    [Fact]
+    public void WhatsApp_signature_must_match_the_body_and_secret()
+    {
+        var body = "{}"u8.ToArray();
+        var good = "sha256=" + Convert.ToHexStringLower(System.Security.Cryptography.HMACSHA256.HashData("secret"u8.ToArray(), body));
+
+        Assert.True(WhatsAppWebhook.IsSigned(body, good, "secret"));
+        Assert.False(WhatsAppWebhook.IsSigned(body, good, "other"));
+        Assert.False(WhatsAppWebhook.IsSigned("{ }"u8.ToArray(), good, "secret"));
+        Assert.False(WhatsAppWebhook.IsSigned(body, null, "secret"));
+    }
+
+    [Fact]
+    public void WhatsApp_delivery_lists_messages_and_skips_status_updates()
+    {
+        var body = System.Text.Encoding.UTF8.GetBytes("""{"entry":[{"changes":[{"value":{"statuses":[{"id":"s"}]}},{"value":{"messages":[{"id":"m1","from":"9477","type":"image","image":{"id":"pic","mime_type":"image/jpeg"}},{"id":"m2","from":"9477","type":"text","text":{"body":"hi"}}]}}]}]}""");
+
+        var messages = WhatsAppWebhook.Parse(body);
+
+        Assert.Equal(2, messages.Count);
+        Assert.Equal(new WhatsAppInbound("m1", "9477", "image", "pic", "image/jpeg"), messages[0]);
+        Assert.Null(messages[1].MediaId);
     }
 
     [Fact]

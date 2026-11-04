@@ -1,8 +1,10 @@
 using Anthropic;
 using ExpenseTracker.Application.Ports;
+using ExpenseTracker.Application.Services;
 using ExpenseTracker.Infrastructure.Persistence;
 using ExpenseTracker.Infrastructure.Reading;
 using ExpenseTracker.Infrastructure.Seed;
+using ExpenseTracker.Infrastructure.WhatsApp;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,6 +28,9 @@ public static class DependencyInjection
         services.AddScoped<IItemMappingRepository, ItemMappingRepository>();
         services.AddScoped<IPriceWatchRepository, PriceWatchRepository>();
         services.AddScoped<DatabaseInitialiser>();
+        services.Configure<WhatsAppOptions>(config.GetSection(WhatsAppOptions.Section));
+        services.AddSingleton<ISecretProtector, SecretProtector>();
+        services.AddScoped<IWhatsAppClient, WhatsAppClient>();
         services.Configure<ClaudeOptions>(config.GetSection(ClaudeOptions.Section));
 
         var claude = config.GetSection(ClaudeOptions.Section).Get<ClaudeOptions>() ?? new ClaudeOptions();

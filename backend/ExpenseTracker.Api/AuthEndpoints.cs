@@ -44,6 +44,7 @@ public static class AuthEndpoints
         var owner = new AuthorizeAttribute { Roles = OwnerRole };
         auth.MapGet("/members", (AuthService s, CancellationToken ct) => s.ListAsync(ct)).RequireAuthorization();
         auth.MapPost("/members", async (CredentialsRequest r, AuthService s, CancellationToken ct) => Results.Ok(await s.AddMemberAsync(r, ct))).RequireAuthorization(owner);
+        auth.MapPut("/members/{id:int}/whatsapp", async (int id, LinkWhatsAppRequest r, AuthService s, CancellationToken ct) => await s.LinkWhatsAppAsync(id, r.Number, ct) ? Results.NoContent() : Results.NotFound()).RequireAuthorization(owner);
         auth.MapDelete("/members/{id:int}", async (int id, AuthService s, CancellationToken ct) => await s.RemoveMemberAsync(id, ct) ? Results.NoContent() : Results.NotFound()).RequireAuthorization(owner);
     }
 

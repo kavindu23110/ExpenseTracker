@@ -9,6 +9,9 @@ public interface IBillFilingService
     /// <summary>Saves a checked draft and returns its id.</summary>
     Task<int> SaveAsync(SaveBillRequest request, UploadedFile? file, CancellationToken ct);
 
+    /// <summary>Corrects a saved bill, refusing a result that duplicates another; false when there is no such bill.</summary>
+    Task<bool> EditAsync(int id, EditBillRequest request, CancellationToken ct);
+
     /// <summary>Changes a saved bill's category; false when there is no such bill.</summary>
     Task<bool> ChangeCategoryAsync(int id, string? category, CancellationToken ct);
 

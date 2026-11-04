@@ -60,6 +60,9 @@ public sealed record AddPantryRequest(string Name, decimal Qty, string? Unit);
 /// <summary>Changes a pantry quantity.</summary>
 public sealed record AdjustPantryRequest(decimal Change);
 
+/// <summary>An exact pantry quantity.</summary>
+public sealed record SetPantryQtyRequest(decimal Qty);
+
 /// <summary>Adds a shopping list line.</summary>
 public sealed record AddShoppingRequest(string Name);
 
@@ -69,23 +72,23 @@ public sealed record SetDoneRequest(bool Done);
 /// <summary>Sets how much of a shopping list line to buy.</summary>
 public sealed record SetShoppingAmountRequest(decimal? Qty, string? Unit);
 
-/// <summary>Pasted bank messages.</summary>
-public sealed record SmsPreviewRequest(string? Text);
-
-/// <summary>A payment found in a message, for the user to check.</summary>
-public sealed record SmsDraftDto(decimal Amount, string Merchant, string? Date, string Category, string Reference, bool AlreadyImported);
-
-/// <summary>A checked payment to save.</summary>
-public sealed record SmsImportItem(decimal Amount, string Merchant, string? Date, string Category, string Reference);
-
-/// <summary>The checked payments.</summary>
-public sealed record SmsImportRequest(IReadOnlyList<SmsImportItem>? Items);
-
 /// <summary>A household member, as sent over the API.</summary>
-public sealed record MemberDto(int Id, string Name, bool IsOwner);
+public sealed record MemberDto(int Id, string Name, bool IsOwner, string? WhatsAppNumber);
 
 /// <summary>Who is signed in, and whether the first account still has to be created.</summary>
 public sealed record SessionDto(bool NeedsSetup, MemberDto? User);
 
 /// <summary>A name and password.</summary>
+public sealed record LinkWhatsAppRequest(string? Number);
+
+/// <summary>A name and password.</summary>
 public sealed record CredentialsRequest(string? Name, string? Password);
+
+/// <summary>One line of a statistics breakdown.</summary>
+public sealed record StatisticsRowDto(string Name, string? NameSi, decimal Amount);
+
+/// <summary>One month on the statistics page.</summary>
+public sealed record StatisticsMonthDto(string Month, decimal Total, int BillCount, IReadOnlyList<StatisticsRowDto> Categories, IReadOnlyList<StatisticsRowDto> Shops, IReadOnlyList<StatisticsRowDto> Items);
+
+/// <summary>The statistics page.</summary>
+public sealed record StatisticsDto(decimal? AveragePerMonth, IReadOnlyList<StatisticsMonthDto> Months);
