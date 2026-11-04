@@ -1,9 +1,10 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { SelectField, TextField } from "@/components/ui/Field";
 import { api } from "@/lib/api";
 import { money, money2 } from "@/lib/format";
+import { householdApi } from "@/features/household/householdApi";
 
 const EMPTY_LINE = { name: "", qty: "1", unit: "", price: "" };
 
@@ -25,6 +26,19 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
   const [category, setCategory] = useState(categories[0] ?? "Other");
   const [lines, setLines] = useState([EMPTY_LINE]);
   const [total, setTotal] = useState("");
+  const queryClient = useQueryClient();
+  const [added, setAdded] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState<string | null>(null);
+  const addCategory = useMutation({
+    mutationFn: (name: string) => householdApi.addCategory(name),
+    onSuccess: (_, name) => {
+      setAdded([...added, name]);
+      setCategory(name);
+      setNewCategory(null);
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["planning"] });
+    },
+  });
   const computed = lines.reduce((sum, l) => sum + lineTotal(l), 0);
   const amount = total.trim() ? parseFloat(total) || 0 : computed;
   const setLine = (index: number, patch: Partial<typeof EMPTY_LINE>) => setLines(lines.map((l, i) => (i === index ? { ...l, ...patch } : l)));
@@ -46,8 +60,18 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <TextField id="m-shop" label="Shop" required value={merchant} onChange={(e) => setMerchant(e.target.value)} />
         <TextField id="m-date" label="Date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
-        <SelectField id="m-category" label="Category" value={category} onChange={setCategory} options={categories.map((c) => ({ value: c, label: c }))} />
+        <SelectField id="m-category" label="Category" value={category} onChange={setCategory} options={[...categories, ...added.filter((c) => !categories.includes(c))].map((c) => ({ value: c, label: c }))} />
       </div>
+      {newCategory === null ? (
+        <button type="button" onClick={() => { addCategory.reset(); setNewCategory(""); }} className="min-h-11 self-start rounded-[10px] border border-field bg-white px-4 text-sm font-semibold">New category</button>
+      ) : (
+        <div className="flex flex-wrap items-end gap-2">
+          <TextField id="m-new-category" label="New category" maxLength={50} autoComplete="off" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className="flex-[1_1_180px]" />
+          <button type="button" disabled={!newCategory.trim() || addCategory.isPending} onClick={() => addCategory.mutate(newCategory.trim())} className="min-h-11 rounded-[10px] bg-accent px-4 text-sm font-bold text-white disabled:opacity-50">Add category</button>
+          <button type="button" onClick={() => setNewCategory(null)} className="min-h-11 rounded-[10px] border border-field bg-white px-4 text-sm font-semibold">Cancel</button>
+          {addCategory.isError && <p role="alert" className="w-full text-sm font-semibold text-warn">{addCategory.error.message}</p>}
+        </div>
+      )}
 
       {lines.map((l, i) => (
         <fieldset key={i} className="grid grid-cols-3 items-end gap-3 rounded-[10px] border border-line-soft bg-[#f8fafb] p-3 sm:grid-cols-[1fr_90px_90px_130px_auto]">
