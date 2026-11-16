@@ -55,6 +55,15 @@ Household members send a photo or PDF to the WhatsApp Business number; the app r
 4. In the Meta app, set the callback URL to `https://<hostname>/api/whatsapp/webhook` with the same verify token, and subscribe to `messages`.
 5. Under Household, the owner enters each member's WhatsApp number.
 
+### Superset charts on the Statistics page
+
+Apache Superset runs as a third container at **http://172.30.0.51:8088** (WARP needed), and its "Household spending" dashboard appears at the bottom of the Statistics page. The API signs in to Superset and gives each signed-in member a five-minute guest token for that one dashboard, so members never need a Superset account.
+
+- Superset reads the database as `superset_reader`, a SQL login that can only `SELECT` from the views `dbo.ReportBillLines` (one row per item or charge, with the item's own category) and `dbo.ReportBills`. Those views come from the `ReportingViews` migration.
+- Secrets live in `.env`: `SUPERSET_SECRET_KEY`, `SUPERSET_GUEST_TOKEN_SECRET`, `SUPERSET_ADMIN_PASSWORD` (sign in as `admin`), `SUPERSET_DB_PASSWORD` and `SUPERSET_DASHBOARD_ID`.
+- Setting it up on a new machine: create the `superset_reader` login with `GRANT SELECT` on the two views, then run `superset/register_data.py` and `superset/starter_dashboard.py` inside the container with `docker compose exec`. Put the printed embed ID in `.env` as `SUPERSET_DASHBOARD_ID`, then run `docker compose up -d api`.
+- To change the charts, edit the dashboard in Superset; the Statistics page shows the changes straight away. A different dashboard needs **Embed dashboard** switched on, with `http://172.30.0.50:3000` as the allowed domain, and its embed ID in `.env`.
+
 Bills, including their images, live in the local `ExpenseTracker` database, so back that up. The Claude sign-in is kept in a Docker volume. If this PC is off or asleep, or Docker isn't running, nobody can reach the site.
 
 ## Household features

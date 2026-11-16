@@ -4,6 +4,7 @@ using ExpenseTracker.Application.Services;
 using ExpenseTracker.Infrastructure.Persistence;
 using ExpenseTracker.Infrastructure.Reading;
 using ExpenseTracker.Infrastructure.Seed;
+using ExpenseTracker.Infrastructure.Superset;
 using ExpenseTracker.Infrastructure.WhatsApp;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,8 @@ public static class DependencyInjection
         services.Configure<WhatsAppOptions>(config.GetSection(WhatsAppOptions.Section));
         services.AddSingleton<ISecretProtector, SecretProtector>();
         services.AddScoped<IWhatsAppClient, WhatsAppClient>();
+        services.Configure<SupersetOptions>(config.GetSection(SupersetOptions.Section));
+        services.AddSingleton<ISupersetClient, SupersetClient>();
         services.Configure<ClaudeOptions>(config.GetSection(ClaudeOptions.Section));
 
         var claude = config.GetSection(ClaudeOptions.Section).Get<ClaudeOptions>() ?? new ClaudeOptions();

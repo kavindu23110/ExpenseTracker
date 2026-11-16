@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { money, monthYear } from "@/lib/format";
 import { householdApi } from "./householdApi";
 import type { StatisticsRow } from "./types";
+import { SupersetDashboard } from "./SupersetDashboard";
 import { HEADING } from "./ui";
 
 const monthLabel = (month: string) => new Date(`${month}-01T00:00:00`).toLocaleDateString("en-US", { month: "short" });
@@ -80,6 +81,7 @@ export function StatisticsPage() {
         <Breakdown title="By shop" rows={month.shops} empty={`No bills in ${name}.`} />
         <Breakdown title="Top items" rows={month.items} empty={`No bills in ${name}.`} />
       </div>
+      <SupersetDashboard />
     </>
   );
 }

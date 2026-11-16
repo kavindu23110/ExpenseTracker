@@ -15,6 +15,12 @@ services:
       WhatsApp__AppSecret: ${WHATSAPP_APP_SECRET:-}
       WhatsApp__AccessToken: ${WHATSAPP_ACCESS_TOKEN:-}
       WhatsApp__PhoneNumberId: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      # Superset charts on the Statistics page; the API signs in to Superset to issue viewer tokens.
+      Superset__InternalUrl: http://superset:8088
+      Superset__PublicUrl: http://172.30.0.51:8088
+      Superset__Username: admin
+      Superset__Password: ${SUPERSET_ADMIN_PASSWORD:?Set SUPERSET_ADMIN_PASSWORD in .env}
+      Superset__DashboardId: ${SUPERSET_DASHBOARD_ID:-}
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
@@ -34,6 +40,25 @@ services:
       ddoc:
         ipv4_address: 172.30.0.50
 
+  superset:
+    build: superset
+    restart: always
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:?Set SUPERSET_SECRET_KEY in .env}
+      SUPERSET_GUEST_TOKEN_SECRET: ${SUPERSET_GUEST_TOKEN_SECRET:?Set SUPERSET_GUEST_TOKEN_SECRET in .env}
+      SUPERSET_ADMIN_USER: admin
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD:?Set SUPERSET_ADMIN_PASSWORD in .env}
+      EXPENSE_APP_ORIGIN: http://172.30.0.50:3000
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - superset-home:/app/superset_home
+    networks:
+      default:
+      # Charts load straight from Superset in the browser, so it needs its own address on the WARP network.
+      ddoc:
+        ipv4_address: 172.30.0.51
+
 networks:
   ddoc:
     external: true
@@ -41,3 +66,4 @@ networks:
 
 volumes:
   claude-signin:
+  superset-home:

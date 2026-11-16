@@ -1,4 +1,5 @@
 using ExpenseTracker.Application.Models;
+using ExpenseTracker.Application.Ports;
 using ExpenseTracker.Application.Services;
 
 namespace ExpenseTracker.Api;
@@ -29,6 +30,20 @@ public static class HouseholdEndpoints
         api.MapPost("/settlements", async (AddSettlementRequest r, BalanceService s, CancellationToken ct) => { await s.AddAsync(r, ct); return Results.NoContent(); });
         api.MapDelete("/settlements/{id:int}", async (int id, BalanceService s, CancellationToken ct) => Done(await s.RemoveAsync(id, ct)));
         api.MapGet("/alerts", (AlertService s, CancellationToken ct) => s.GetAsync(ct));
+        api.MapGet("/superset", (ISupersetClient s) => s.Embed);
+        api.MapPost("/superset/guest-token", async (System.Security.Claims.ClaimsPrincipal user, ISupersetClient s, ILoggerFactory logs, CancellationToken ct) =>
+        {
+            if (!s.Embed.Enabled) return Results.NotFound();
+            try
+            {
+                return Results.Ok(new { token = await s.GetGuestTokenAsync(user.Identity?.Name ?? "member", ct) });
+            }
+            catch (HttpRequestException e)
+            {
+                logs.CreateLogger("Superset").LogError(e, "Superset refused a guest token request");
+                return Results.Problem("The charts service isn't answering. Try again later.", statusCode: StatusCodes.Status502BadGateway);
+            }
+        });
         api.MapPut("/pantry/categories", async (SetPantryCategoriesRequest r, PantryService s, CancellationToken ct) => { await s.SetPantryCategoriesAsync(r.Categories, ct); return Results.NoContent(); });
         api.MapPost("/pantry", async (AddPantryRequest r, PantryService s, CancellationToken ct) => { await s.AddAsync(r, ct); return Results.NoContent(); });
         api.MapPost("/pantry/{id:int}/adjust", async (int id, AdjustPantryRequest r, PantryService s, CancellationToken ct) => Done(await s.AdjustAsync(id, r.Change, ct)));
