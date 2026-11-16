@@ -5,8 +5,9 @@ import { SelectField, TextField } from "@/components/ui/Field";
 import { api } from "@/lib/api";
 import { money, money2 } from "@/lib/format";
 import { householdApi } from "@/features/household/householdApi";
+import { ItemCategorySelect } from "./ItemCategorySelect";
 
-const EMPTY_LINE = { name: "", qty: "1", unit: "", price: "" };
+const EMPTY_LINE: { name: string; qty: string; unit: string; price: string; category: string | null } = { name: "", qty: "1", unit: "", price: "", category: null };
 
 const localToday = () => {
   const now = new Date();
@@ -43,7 +44,7 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
 
   const save = useMutation({
     mutationFn: () => {
-      const items = lines.filter((l) => l.name.trim()).map((l) => ({ name: l.name.trim(), qty: parseFloat(l.qty), price: parseFloat(l.price), unit: l.unit.trim() || null }));
+      const items = lines.filter((l) => l.name.trim()).map((l) => ({ name: l.name.trim(), qty: parseFloat(l.qty), price: parseFloat(l.price), unit: l.unit.trim() || null, category: l.category }));
       return api.saveBill({ lang: "en", merchant, date, amount, category, suggestedCategory: category, manual: true, items, charges: [] }, null);
     },
     onSuccess: ({ id }) => onSaved(id, `Saved ${money(amount)} at ${merchant} under ${category}.`),
@@ -78,6 +79,7 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
           <TextField id={`m-qty-${i}`} label="Qty" type="number" min="0.001" step="any" required mono value={l.qty} onChange={(e) => setLine(i, { qty: e.target.value })} />
           <TextField id={`m-unit-${i}`} label="Unit" placeholder="kg" value={l.unit} onChange={(e) => setLine(i, { unit: e.target.value })} />
           <TextField id={`m-price-${i}`} label="Price (Rs)" type="number" min="0" step="any" required mono value={l.price} onChange={(e) => setLine(i, { price: e.target.value })} />
+          <ItemCategorySelect id={`m-cat-${i}`} value={l.category} billCategory={category} categories={categories} onChange={(c) => setLine(i, { category: c })} className="col-span-3 sm:col-span-5" />
           {lines.length > 1 && <button type="button" aria-label={`Remove line ${i + 1}`} onClick={() => setLines(lines.filter((_, n) => n !== i))} className="col-span-3 min-h-11 rounded-[10px] border border-field bg-white px-3.5 text-sm font-semibold sm:col-span-1">Remove</button>}
         </fieldset>
       ))}

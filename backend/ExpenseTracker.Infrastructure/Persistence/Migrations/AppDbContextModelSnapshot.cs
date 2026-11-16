@@ -18,7 +18,7 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .UseCollation("Latin1_General_100_CI_AS_SC")
-                .HasAnnotation("ProductVersion", "10.0.14")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -220,6 +220,23 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                     b.HasKey("Name");
 
                     b.ToTable("CustomCategories");
+                });
+
+            modelBuilder.Entity("ExpenseTracker.Domain.Household.PantryCategory", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("PantryCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            Name = "Groceries"
+                        });
                 });
 
             modelBuilder.Entity("ExpenseTracker.Domain.Household.PantryItem", b =>
@@ -561,6 +578,10 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
 
                             b1.Property<int>("BillId")
                                 .HasColumnType("int");
+
+                            b1.Property<string>("Category")
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
 
                             b1.Property<decimal?>("MarkedPrice")
                                 .HasPrecision(18, 2)

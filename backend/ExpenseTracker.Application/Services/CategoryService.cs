@@ -6,7 +6,7 @@ using ExpenseTracker.Domain.Household;
 namespace ExpenseTracker.Application.Services;
 
 /// <summary>The built-in categories plus those the household added.</summary>
-public sealed class CategoryService(IStore<CustomCategory> custom, IBillRepository bills, IStore<Budget> budgets, IStore<RecurringBill> recurring)
+public sealed class CategoryService(IStore<CustomCategory> custom, IStore<PantryCategory> pantryCategories, IBillRepository bills, IStore<Budget> budgets, IStore<RecurringBill> recurring)
 {
     /// <summary>Lists the household's own categories by name.</summary>
     public async Task<IReadOnlyList<string>> CustomAsync(CancellationToken ct) =>
@@ -35,11 +35,12 @@ public sealed class CategoryService(IStore<CustomCategory> custom, IBillReposito
     public async Task<bool> RemoveAsync(string name, CancellationToken ct)
     {
         if (await custom.FindAsync(name, ct) is not { } category) return false;
-        var inUse = (await bills.GetAllAsync(ct)).Any(b => b.Category == category.Name)
+        var inUse = (await bills.GetAllAsync(ct)).Any(b => b.Category == category.Name || b.Items.Any(i => i.Category == category.Name))
             || (await budgets.ListAsync(ct)).Any(b => b.Category == category.Name)
             || (await recurring.ListAsync(ct)).Any(b => b.Category == category.Name);
-        if (inUse) throw new DomainException($"{category.Name} is used by a bill, budget or recurring bill, so it can't be removed.");
+        if (inUse) throw new DomainException($"{category.Name} is used by a bill, item, budget or recurring bill, so it can't be removed.");
         custom.Remove(category);
+        if (await pantryCategories.FindAsync(category.Name, ct) is { } flag) pantryCategories.Remove(flag);
         await custom.SaveAsync(ct);
         return true;
     }

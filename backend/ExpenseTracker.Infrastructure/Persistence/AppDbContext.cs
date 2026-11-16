@@ -19,6 +19,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<WhatsAppConfig> WhatsAppConfigs => Set<WhatsAppConfig>();
     public DbSet<ToBuyMonthlyFill> ToBuyMonthlyFills => Set<ToBuyMonthlyFill>();
     public DbSet<CustomCategory> CustomCategories => Set<CustomCategory>();
+    public DbSet<PantryCategory> PantryCategories => Set<PantryCategory>();
     public DbSet<SavingsGoal> SavingsGoals => Set<SavingsGoal>();
     public DbSet<RecurringBill> RecurringBills => Set<RecurringBill>();
     public DbSet<PantryItem> PantryItems => Set<PantryItem>();
@@ -59,6 +60,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
                 i.Property(x => x.NameSi).HasMaxLength(300);
                 i.Property(x => x.Unit).HasMaxLength(20);
                 i.Property(x => x.MarketKey).HasMaxLength(100);
+                i.Property(x => x.Category).HasMaxLength(50);
                 i.Property(x => x.Qty).HasPrecision(18, 3);
                 i.Property(x => x.Price).HasPrecision(18, 2);
                 i.Property(x => x.MarkedPrice).HasPrecision(18, 2);
@@ -88,6 +90,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.HasKey(x => new { x.KeyA, x.KeyB });
             e.Property(x => x.KeyA).HasMaxLength(200);
             e.Property(x => x.KeyB).HasMaxLength(200);
+        });
+
+        b.Entity<PantryCategory>(e =>
+        {
+            e.HasKey(x => x.Name);
+            e.Property(x => x.Name).HasMaxLength(BillCategory.MaxLength);
+            e.HasData(new { Name = BillCategory.Groceries });
         });
 
         b.Entity<CustomCategory>(e =>

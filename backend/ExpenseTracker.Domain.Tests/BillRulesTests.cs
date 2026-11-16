@@ -104,4 +104,16 @@ public class BillRulesTests
         Assert.Null(BillFileType.Detect("<html>"u8));
         Assert.Equal(BillFileType.Pdf, BillFileType.Detect("%PDF-1.7"u8));
     }
+
+    [Fact]
+    public void Item_categories_split_the_bill_amount()
+    {
+        var content = new BillContent(BillLanguage.English, "Shop", null, null, null, null, new DateOnly(2026, 11, 1), null, null, null, null,
+            [new BillItem("Rice", 1, 300), new BillItem("Soap", 2, 100, category: BillCategory.Shopping), new BillItem("Panadol", 1, 50, category: BillCategory.Health)], []);
+        var bill = Bill.Create(content, "Shop", new DateOnly(2026, 11, 1), 560, BillCategory.Groceries, true, null);
+
+        var split = bill.AmountByCategory();
+
+        Assert.Equal([(BillCategory.Groceries, 310m), (BillCategory.Shopping, 200m), (BillCategory.Health, 50m)], split);
+    }
 }

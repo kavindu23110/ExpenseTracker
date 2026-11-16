@@ -22,10 +22,11 @@ internal sealed record BillExtraction(
     [property: JsonPropertyName("items")] List<ExtractedItem> Items,
     [property: JsonPropertyName("charges")] List<ExtractedCharge> Charges)
 {
-    /// <summary>Validates through the domain; market keys outside the known list are dropped.</summary>
-    public BillReading ToReading(IReadOnlySet<string> marketKeys)
+    /// <summary>Validates through the domain; market keys and categories outside the known lists are dropped.</summary>
+    public BillReading ToReading(IReadOnlySet<string> marketKeys, IReadOnlyList<string> categories)
     {
-        var items = Items.Select(i => new BillItem(i.Name, i.Qty, i.Price, i.Unit, i.NameSi, i.MarkedPrice, i.MarketKey is not null && marketKeys.Contains(i.MarketKey) ? i.MarketKey : null)).ToList();
+        string? Known(string? category) => categories.FirstOrDefault(c => string.Equals(c, category?.Trim(), StringComparison.OrdinalIgnoreCase));
+        var items = Items.Select(i => new BillItem(i.Name, i.Qty, i.Price, i.Unit, i.NameSi, i.MarkedPrice, i.MarketKey is not null && marketKeys.Contains(i.MarketKey) ? i.MarketKey : null, Known(i.Category))).ToList();
         var charges = Charges.Select(c => new BillCharge(c.Label, c.Amount, c.LabelSi)).ToList();
         var date = DateOnly.TryParseExact(Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : (DateOnly?)null;
         var time = TimeOnly.TryParse(Time, CultureInfo.InvariantCulture, out var t) ? t : (TimeOnly?)null;
@@ -42,7 +43,8 @@ internal sealed record ExtractedItem(
     [property: JsonPropertyName("unit")] string? Unit,
     [property: JsonPropertyName("price")] decimal Price,
     [property: JsonPropertyName("marked_price")] decimal? MarkedPrice,
-    [property: JsonPropertyName("market_key")] string? MarketKey);
+    [property: JsonPropertyName("market_key")] string? MarketKey,
+    [property: JsonPropertyName("category")] string? Category = null);
 
 /// <summary>An extracted charge.</summary>
 internal sealed record ExtractedCharge(

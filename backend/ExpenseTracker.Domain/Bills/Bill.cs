@@ -105,6 +105,15 @@ public sealed class Bill
     /// <summary>Total saved against marked prices.</summary>
     public decimal Saved => Money.Round(_items.Sum(i => i.Saved));
 
+    /// <summary>The bill's amount split by category: items with their own category count there, the rest stays with the bill.</summary>
+    public IReadOnlyList<(string Category, decimal Amount)> AmountByCategory()
+    {
+        var own = _items.Where(i => i.Category is not null && i.Category != Category)
+            .GroupBy(i => i.Category!).Select(g => (Category: g.Key, Amount: Money.Round(g.Sum(i => i.LineAmount)))).ToList();
+        var rest = Money.Round(Amount - own.Sum(o => o.Amount));
+        return rest == 0 && own.Count > 0 ? own : [(Category, rest), .. own];
+    }
+
     /// <summary>Change returned, when the cash given is known.</summary>
     public decimal? Change => Paid is null ? null : Money.Round(Paid.Value - Amount);
 }

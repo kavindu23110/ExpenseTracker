@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { money, money2, qtyLabel } from "@/lib/format";
 import type { BillDraft } from "@/lib/types";
 import { ItemName } from "./ItemName";
+import { ItemCategorySelect } from "./ItemCategorySelect";
 import { ReceiptPreview } from "./ReceiptPreview";
 
 /** Lets the user check and correct what was read, then save it. */
@@ -62,9 +63,17 @@ export function ScanReview({ draft, onChange, file, previewUrl, categories, onDi
           <div className="flex flex-col gap-2.5 rounded-[10px] border border-line-soft bg-[#f8fafb] px-3.5 py-3">
             <span className="text-[13px] font-bold text-ink-2">Line items found: {draft.items.length}</span>
             {draft.items.map((it, i) => (
-              <div key={i} className="flex justify-between gap-3 text-sm">
-                <ItemName item={it} suffix={<span className="text-muted">× {qtyLabel(it.qty, it.unit)}</span>} />
-                <span className="font-mono whitespace-nowrap">{money2(it.amount)}</span>
+              <div key={i} className="flex flex-col gap-1.5 border-b border-line-soft pb-2 text-sm last:border-0">
+                <div className="flex justify-between gap-3">
+                  <ItemName item={it} suffix={<span className="text-muted">× {qtyLabel(it.qty, it.unit)}</span>} />
+                  <span className="font-mono whitespace-nowrap">{money2(it.amount)}</span>
+                </div>
+                <ItemCategorySelect id={`scan-cat-${i}`} value={it.category} billCategory={category} categories={categories}
+                  onChange={(c) => onChange({ ...draft, items: draft.items.map((x, n) => (n === i ? { ...x, category: c } : x)) })} />
+                {!it.category && it.suggestedCategory && it.suggestedCategory !== category && (
+                  <button type="button" onClick={() => onChange({ ...draft, items: draft.items.map((x, n) => (n === i ? { ...x, category: x.suggestedCategory } : x)) })}
+                    className="self-start text-[13px] font-semibold text-accent-ink underline">Suggested: {it.suggestedCategory} — use it</button>
+                )}
               </div>
             ))}
             <div className="flex flex-col gap-1 border-t border-line pt-2 text-[13px]">

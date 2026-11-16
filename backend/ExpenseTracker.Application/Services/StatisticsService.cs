@@ -18,7 +18,7 @@ public sealed class StatisticsService(IBillRepository bills, IItemMappingReposit
             m.Month.ToString("yyyy-MM"),
             m.Total,
             m.Bills.Count,
-            Rows(m.Bills.GroupBy(b => b.Category).Select(g => new StatisticsRowDto(g.Key, null, g.Sum(b => b.Amount)))),
+            Rows(m.Bills.SelectMany(b => b.AmountByCategory()).GroupBy(c => c.Category).Select(g => new StatisticsRowDto(g.Key, null, g.Sum(c => c.Amount)))),
             Rows(m.Bills.GroupBy(b => b.Merchant).Select(g => new StatisticsRowDto(g.Key, null, g.Sum(b => b.Amount)))),
             Rows(ItemTotals.Summarise(m.Bills.SelectMany(b => b.Items), known).Select(i => new StatisticsRowDto(i.Name, i.NameSi, i.Amount))).Take(TopCount).ToList())).ToList());
     }

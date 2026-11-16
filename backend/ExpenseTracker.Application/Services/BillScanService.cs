@@ -12,6 +12,7 @@ public sealed class BillScanService(
     IBillReader reader,
     IBillRepository bills,
     IPriceWatchRepository priceWatch,
+    CategoryService categories,
     IOptions<BillOptions> options) : IBillScanService
 {
     /// <inheritdoc />
@@ -19,7 +20,7 @@ public sealed class BillScanService(
     {
         var contentType = UploadGuard.Check(file, options.Value);
         var hint = BillLanguage.IsValid(langHint) ? langHint : null;
-        var reading = await reader.ReadAsync(file.Data, contentType, hint, await priceWatch.GetMarketPricesAsync(ct), ct);
+        var reading = await reader.ReadAsync(file.Data, contentType, hint, await priceWatch.GetMarketPricesAsync(ct), await categories.AllAsync(ct), ct);
         return await ToDraftAsync(reading, file.FileName, ct);
     }
 

@@ -6,7 +6,7 @@ using ExpenseTracker.Domain.Household;
 namespace ExpenseTracker.Application.Services;
 
 /// <summary>The pantry and shopping list.</summary>
-public sealed class PantryService(IStore<PantryItem> pantry, IStore<ShoppingItem> shopping, IBillRepository bills, IItemMappingRepository mappings, IStore<ToBuyMonthlyFill> fills, ITodayProvider today)
+public sealed class PantryService(IStore<PantryItem> pantry, IStore<ShoppingItem> shopping, IBillRepository bills, IItemMappingRepository mappings, IStore<ToBuyMonthlyFill> fills, IStore<PantryCategory> pantryCategories, CategoryService categories, ITodayProvider today)
 {
     /// <summary>Loads both lists, first filling the shopping list if this month has not been filled.</summary>
     public async Task<PantryDto> GetAsync(CancellationToken ct)
@@ -14,7 +14,32 @@ public sealed class PantryService(IStore<PantryItem> pantry, IStore<ShoppingItem
         await FillForMonthAsync(ct);
         return new(
         (await pantry.ListAsync(ct)).OrderBy(p => p.IsOut).ThenBy(p => p.Name).Select(p => new PantryItemDto(p.Id, p.Name, p.Qty, p.Unit, p.IsOut)).ToList(),
-        (await shopping.ListAsync(ct)).OrderBy(s => s.Done).ThenBy(s => s.Name).Select(s => new ShoppingItemDto(s.Id, s.Name, s.Done, s.Qty, s.Unit)).ToList());
+        (await shopping.ListAsync(ct)).OrderBy(s => s.Done).ThenBy(s => s.Name).Select(s => new ShoppingItemDto(s.Id, s.Name, s.Done, s.Qty, s.Unit)).ToList(),
+        await categories.AllAsync(ct),
+        await PantryCategoryNamesAsync(ct));
+    }
+
+    /// <summary>The categories whose bought items go into the pantry.</summary>
+    public async Task<IReadOnlyList<string>> PantryCategoryNamesAsync(CancellationToken ct) =>
+        (await pantryCategories.ListAsync(ct)).Select(c => c.Name).ToList();
+
+    /// <summary>Replaces the categories that fill the pantry.</summary>
+    public async Task SetPantryCategoriesAsync(IReadOnlyList<string> names, CancellationToken ct)
+    {
+        var wanted = names.Select(n => n.Trim()).Distinct().ToList();
+        foreach (var name in wanted) await categories.RequireAsync(name, ct);
+        var current = await pantryCategories.ListAsync(ct);
+        foreach (var c in current.Where(c => !wanted.Contains(c.Name))) pantryCategories.Remove(c);
+        foreach (var name in wanted.Where(n => current.All(c => c.Name != n))) pantryCategories.Add(new PantryCategory(name));
+        await pantryCategories.SaveAsync(ct);
+    }
+
+    /// <summary>Stocks the items of a saved bill whose category (their own, else the bill's) fills the pantry.</summary>
+    public async Task StockBillAsync(Bill bill, CancellationToken ct)
+    {
+        var chosen = await PantryCategoryNamesAsync(ct);
+        var items = bill.Items.Where(i => chosen.Contains(i.Category ?? bill.Category)).ToList();
+        if (items.Count > 0) await StockAsync(items, ct);
     }
 
     /// <summary>Suggests items for the list from last month's grocery bills.</summary>

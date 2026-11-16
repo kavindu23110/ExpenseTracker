@@ -24,6 +24,7 @@ public static class HouseholdEndpoints
         api.MapGet("/prices", (PriceHistoryService s, CancellationToken ct) => s.GetAsync(ct));
 
         api.MapGet("/pantry", (PantryService s, CancellationToken ct) => s.GetAsync(ct));
+        api.MapPut("/pantry/categories", async (SetPantryCategoriesRequest r, PantryService s, CancellationToken ct) => { await s.SetPantryCategoriesAsync(r.Categories, ct); return Results.NoContent(); });
         api.MapPost("/pantry", async (AddPantryRequest r, PantryService s, CancellationToken ct) => { await s.AddAsync(r, ct); return Results.NoContent(); });
         api.MapPost("/pantry/{id:int}/adjust", async (int id, AdjustPantryRequest r, PantryService s, CancellationToken ct) => Done(await s.AdjustAsync(id, r.Change, ct)));
         api.MapPut("/pantry/{id:int}/qty", async (int id, SetPantryQtyRequest r, PantryService s, CancellationToken ct) => Done(await s.SetQtyAsync(id, r.Qty, ct)));

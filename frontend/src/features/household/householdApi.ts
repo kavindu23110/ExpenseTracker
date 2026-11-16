@@ -46,6 +46,7 @@ export const householdApi = {
   prices: () => call<PriceHistoryRow[]>("/api/prices"),
 
   pantry: () => call<Pantry>("/api/pantry"),
+  setPantryCategories: (categories: string[]) => call<void>("/api/pantry/categories", "PUT", { categories }),
   addPantry: (name: string, qty: number, unit: string) => call<void>("/api/pantry", "POST", { name, qty, unit }),
   adjustPantry: (id: number, change: number) => call<void>(`/api/pantry/${id}/adjust`, "POST", { change }),
   setPantryQty: (id: number, qty: number) => call<void>(`/api/pantry/${id}/qty`, "PUT", { qty }),

@@ -14,7 +14,7 @@ namespace ExpenseTracker.Infrastructure.Reading;
 public sealed class ClaudeBillReaderAdapter(AnthropicClient client, IOptions<ClaudeOptions> options, ILogger<ClaudeBillReaderAdapter> logger) : IBillReader
 {
     /// <inheritdoc />
-    public async Task<BillReading> ReadAsync(byte[] data, string contentType, string? langHint, IReadOnlyList<MarketPrice> marketPrices, CancellationToken ct)
+    public async Task<BillReading> ReadAsync(byte[] data, string contentType, string? langHint, IReadOnlyList<MarketPrice> marketPrices, IReadOnlyList<string> categories, CancellationToken ct)
     {
         Message response;
         try
@@ -32,7 +32,7 @@ public sealed class ClaudeBillReaderAdapter(AnthropicClient client, IOptions<Cla
                         Content = new List<ContentBlockParam>
                         {
                             FileBlock(data, contentType),
-                            new TextBlockParam { Text = BillExtractionPrompt.Instruction(langHint, marketPrices) },
+                            new TextBlockParam { Text = BillExtractionPrompt.Instruction(langHint, marketPrices, categories) },
                         },
                     },
                 ],
@@ -52,7 +52,7 @@ public sealed class ClaudeBillReaderAdapter(AnthropicClient client, IOptions<Cla
             throw new BillReadFailedException("The bill could not be sent for reading. Check the API key and settings.", ex);
         }
 
-        return Parse(response, marketPrices);
+        return Parse(response, marketPrices, categories);
     }
 
     private static ContentBlockParam FileBlock(byte[] data, string contentType)
@@ -74,12 +74,12 @@ public sealed class ClaudeBillReaderAdapter(AnthropicClient client, IOptions<Cla
         };
     }
 
-    private static BillReading Parse(Message response, IReadOnlyList<MarketPrice> marketPrices)
+    private static BillReading Parse(Message response, IReadOnlyList<MarketPrice> marketPrices, IReadOnlyList<string> categories)
     {
         if (response.StopReason == StopReason.Refusal) throw new BillReadFailedException("This file could not be read as a bill.");
         if (response.StopReason == StopReason.MaxTokens) throw new BillReadFailedException("This bill is too long to read in one go.");
 
         var json = string.Concat(response.Content.Select(b => b.Value).OfType<TextBlock>().Select(t => t.Text));
-        return BillExtractionParser.Parse(json, marketPrices);
+        return BillExtractionParser.Parse(json, marketPrices, categories);
     }
 }

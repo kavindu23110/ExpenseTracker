@@ -8,6 +8,6 @@ namespace ExpenseTracker.Infrastructure.Reading;
 public sealed class UnconfiguredBillReader : IBillReader
 {
     /// <inheritdoc />
-    public Task<BillReading> ReadAsync(byte[] data, string contentType, string? langHint, IReadOnlyList<MarketPrice> marketPrices, CancellationToken ct) =>
+    public Task<BillReading> ReadAsync(byte[] data, string contentType, string? langHint, IReadOnlyList<MarketPrice> marketPrices, IReadOnlyList<string> categories, CancellationToken ct) =>
         throw new BillReaderUnavailableException("Bill reading is not set up yet. Install Claude Code or add a Claude API key to the backend to read real bills.");
 }

@@ -8,6 +8,10 @@ export interface BillItem {
   markedPrice: number | null;
   marketKey: string | null;
   amount: number;
+  /** The item's own category; null follows the bill. */
+  category?: string | null;
+  /** The scan's guess, shown as a hint until the user picks. */
+  suggestedCategory?: string | null;
 }
 
 /** A non-item amount on a bill. */

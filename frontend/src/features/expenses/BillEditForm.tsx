@@ -5,13 +5,14 @@ import { TextField } from "@/components/ui/Field";
 import { api } from "@/lib/api";
 import { money2 } from "@/lib/format";
 import type { BillDetail, BillItem } from "@/lib/types";
+import { ItemCategorySelect } from "./ItemCategorySelect";
 
 type Line = BillItem & { qtyText: string; priceText: string };
 
 const NEW_LINE: Line = { name: "", nameSi: null, qty: 1, price: 0, unit: null, markedPrice: null, marketKey: null, amount: 0, qtyText: "1", priceText: "" };
 
 /** Corrects a saved bill's shop, date, items and total; a hand-entered bill's total always follows its lines. */
-export function BillEditForm({ bill, onDone }: { bill: BillDetail; onDone: () => void }) {
+export function BillEditForm({ bill, categories, onDone }: { bill: BillDetail; categories: string[]; onDone: () => void }) {
   const queryClient = useQueryClient();
   const [merchant, setMerchant] = useState(bill.merchant);
   const [date, setDate] = useState(bill.date);
@@ -26,7 +27,7 @@ export function BillEditForm({ bill, onDone }: { bill: BillDetail; onDone: () =>
       merchant,
       date,
       amount: bill.scanned ? parseFloat(total) : computed,
-      items: lines.map((l) => ({ name: l.name, nameSi: l.nameSi, qty: parseFloat(l.qtyText), price: parseFloat(l.priceText), unit: l.unit?.trim() || null, markedPrice: l.markedPrice, marketKey: l.marketKey, amount: 0 })),
+      items: lines.map((l) => ({ name: l.name, nameSi: l.nameSi, qty: parseFloat(l.qtyText), price: parseFloat(l.priceText), unit: l.unit?.trim() || null, markedPrice: l.markedPrice, marketKey: l.marketKey, amount: 0, category: l.category ?? null })),
     }),
     onSuccess: async () => {
       await queryClient.invalidateQueries();
@@ -50,6 +51,7 @@ export function BillEditForm({ bill, onDone }: { bill: BillDetail; onDone: () =>
           <TextField id={`e-qty-${bill.id}-${i}`} label="Qty" type="number" min="0.001" step="any" required mono value={l.qtyText} onChange={(e) => setLine(i, { qtyText: e.target.value })} />
           <TextField id={`e-unit-${bill.id}-${i}`} label="Unit" value={l.unit ?? ""} onChange={(e) => setLine(i, { unit: e.target.value })} />
           <TextField id={`e-price-${bill.id}-${i}`} label="Price (Rs)" type="number" min="0" step="any" required mono value={l.priceText} onChange={(e) => setLine(i, { priceText: e.target.value })} />
+          <ItemCategorySelect id={`e-cat-${bill.id}-${i}`} value={l.category} billCategory={bill.category} categories={categories} onChange={(c) => setLine(i, { category: c })} className="col-span-3" />
           {lines.length > 1 && <button type="button" aria-label={`Remove line ${i + 1}`} onClick={() => setLines(lines.filter((_, n) => n !== i))} className="col-span-3 min-h-11 rounded-[10px] border border-field bg-white px-3.5 text-sm font-semibold">Remove item</button>}
         </fieldset>
       ))}

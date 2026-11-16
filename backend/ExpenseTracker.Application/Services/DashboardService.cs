@@ -33,7 +33,7 @@ public sealed class DashboardService(
 
         var baseSet = all.Where(filter.Matches).ToList();
         var shown = baseSet.Where(b => string.IsNullOrEmpty(q.Category) || b.Category == q.Category).ToList();
-        var byCategory = shown.GroupBy(b => b.Category).Select(g => (Name: g.Key, Amount: g.Sum(b => b.Amount))).OrderByDescending(c => c.Amount).ToList();
+        var byCategory = shown.SelectMany(b => b.AmountByCategory()).GroupBy(c => c.Category).Select(g => (Name: g.Key, Amount: g.Sum(c => c.Amount))).OrderByDescending(c => c.Amount).ToList();
         var total = shown.Sum(b => b.Amount);
         var max = byCategory.Count > 0 ? byCategory[0].Amount : 1;
 

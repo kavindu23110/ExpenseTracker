@@ -33,6 +33,8 @@ export interface ToBuySuggestion { name: string; nameSi: string | null; qty: num
 export interface Pantry {
   pantry: { id: number; name: string; qty: number; unit: string | null; isOut: boolean }[];
   shopping: { id: number; name: string; done: boolean; qty: number | null; unit: string | null }[];
+  categories: string[];
+  pantryCategories: string[];
 }
 
 /** A payment found in a bank message. */

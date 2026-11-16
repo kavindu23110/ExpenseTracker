@@ -20,16 +20,18 @@ internal static class BillExtractionPrompt
         - qty: the quantity or weight. unit: "kg", "L" or similar for sold-by-measure lines, else null. price: the price per unit actually charged.
         - marked_price: the marked price or MRP per unit if the bill prints one, else null.
         - market_key: the matching key from the market price list below when the item is that product, else null.
+        - category: the best fitting name from the category list below for what the item is (for example soap is Shopping, medicine is Health, rice is Groceries), else null.
         - charges: non-item lines that change the total, such as service charge, tax, delivery or rounding. Discounts are negative. Subtotals, totals, cash and change are not charges.
         - total: the final total printed on the bill.
         """;
 
     /// <summary>Builds the per-request instruction with the language hint and market keys.</summary>
-    public static string Instruction(string? langHint, IReadOnlyList<MarketPrice> marketPrices)
+    public static string Instruction(string? langHint, IReadOnlyList<MarketPrice> marketPrices, IReadOnlyList<string> categories)
     {
         var keys = marketPrices.Count == 0 ? "(none)" : string.Join("\n", marketPrices.Select(m => $"- {m.Key}: {m.Description}"));
         var hint = langHint is null ? "" : $"\nThe user says this bill is in {(langHint == "si" ? "Sinhala" : "English")}.";
-        return $"Read this bill.{hint}\n\nMarket price list:\n{keys}";
+        var names = string.Join("\n", categories.Select(c => $"- {c}"));
+        return $"Read this bill.{hint}\n\nMarket price list:\n{keys}\n\nCategories:\n{names}";
     }
 
     /// <summary>The JSON schema for the structured output.</summary>
@@ -56,7 +58,7 @@ internal static class BillExtractionPrompt
               "items": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["name","name_si","qty","unit","price","marked_price","market_key"],
+                "required": ["name","name_si","qty","unit","price","marked_price","market_key","category"],
                 "properties": {
                   "name": { "type": "string" },
                   "name_si": { "type": ["string","null"] },
@@ -64,7 +66,8 @@ internal static class BillExtractionPrompt
                   "unit": { "type": ["string","null"] },
                   "price": { "type": "number" },
                   "marked_price": { "type": ["number","null"] },
-                  "market_key": { "type": ["string","null"] }
+                  "market_key": { "type": ["string","null"] },
+                  "category": { "type": ["string","null"] }
                 }
               }
             },

@@ -3,13 +3,13 @@ using ExpenseTracker.Domain.Bills;
 namespace ExpenseTracker.Application.Models;
 
 /// <summary>A line item as sent over the API.</summary>
-public sealed record BillItemDto(string Name, string? NameSi, decimal Qty, decimal Price, string? Unit, decimal? MarkedPrice, string? MarketKey, decimal Amount)
+public sealed record BillItemDto(string Name, string? NameSi, decimal Qty, decimal Price, string? Unit, decimal? MarkedPrice, string? MarketKey, decimal Amount, string? Category = null)
 {
     /// <summary>Maps from the domain.</summary>
-    public static BillItemDto From(BillItem i) => new(i.Name, i.NameSi, i.Qty, i.Price, i.Unit, i.MarkedPrice, i.MarketKey, i.LineAmount);
+    public static BillItemDto From(BillItem i) => new(i.Name, i.NameSi, i.Qty, i.Price, i.Unit, i.MarkedPrice, i.MarketKey, i.LineAmount, i.Category);
 
     /// <summary>Maps to the domain, re-running its validation.</summary>
-    public BillItem ToDomain() => new(Name, Qty, Price, Unit, NameSi, MarkedPrice, MarketKey);
+    public BillItem ToDomain() => new(Name, Qty, Price, Unit, NameSi, MarkedPrice, MarketKey, Category);
 }
 
 /// <summary>A charge as sent over the API.</summary>

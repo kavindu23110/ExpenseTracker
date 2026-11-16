@@ -46,7 +46,10 @@ public sealed record PantryItemDto(int Id, string Name, decimal Qty, string? Uni
 public sealed record ShoppingItemDto(int Id, string Name, bool Done, decimal? Qty, string? Unit);
 
 /// <summary>The pantry and shopping list.</summary>
-public sealed record PantryDto(IReadOnlyList<PantryItemDto> Pantry, IReadOnlyList<ShoppingItemDto> Shopping);
+public sealed record PantryDto(IReadOnlyList<PantryItemDto> Pantry, IReadOnlyList<ShoppingItemDto> Shopping, IReadOnlyList<string> Categories, IReadOnlyList<string> PantryCategories);
+
+/// <summary>The categories whose items should go into the pantry.</summary>
+public sealed record SetPantryCategoriesRequest(IReadOnlyList<string> Categories);
 
 /// <summary>Adds a pantry item.</summary>
 public sealed record ToBuyLastMonthDto(string Month, decimal Total);

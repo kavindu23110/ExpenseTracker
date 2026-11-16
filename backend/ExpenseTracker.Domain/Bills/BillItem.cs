@@ -6,7 +6,7 @@ public sealed class BillItem
     private BillItem() { Name = string.Empty; }
 
     /// <summary>Creates a validated line item.</summary>
-    public BillItem(string name, decimal qty, decimal price, string? unit = null, string? nameSi = null, decimal? markedPrice = null, string? marketKey = null)
+    public BillItem(string name, decimal qty, decimal price, string? unit = null, string? nameSi = null, decimal? markedPrice = null, string? marketKey = null, string? category = null)
     {
         if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(nameSi)) throw new DomainException("A line item needs a name.");
         if (qty <= 0) throw new DomainException($"Quantity for '{name}' must be above zero.");
@@ -18,6 +18,8 @@ public sealed class BillItem
         NameSi = string.IsNullOrWhiteSpace(nameSi) ? null : nameSi.Trim();
         MarkedPrice = markedPrice is > 0 ? markedPrice : null;
         MarketKey = string.IsNullOrWhiteSpace(marketKey) ? null : marketKey.Trim();
+        Category = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
+        if (Category is { Length: > BillCategory.MaxLength }) throw new DomainException($"Category for '{Name}' is too long.");
     }
 
     public int Id { get; private set; }
@@ -28,6 +30,9 @@ public sealed class BillItem
     public string? Unit { get; private set; }
     public decimal? MarkedPrice { get; private set; }
     public string? MarketKey { get; private set; }
+
+    /// <summary>The item's own category; null means it follows the bill's category.</summary>
+    public string? Category { get; private set; }
 
     /// <summary>Quantity times price, rounded.</summary>
     public decimal LineAmount => Money.Round(Qty * Price);

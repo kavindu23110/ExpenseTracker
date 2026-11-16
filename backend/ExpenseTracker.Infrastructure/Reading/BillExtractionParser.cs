@@ -10,12 +10,12 @@ namespace ExpenseTracker.Infrastructure.Reading;
 internal static class BillExtractionParser
 {
     /// <summary>Parses the JSON; failures become read errors the user can act on.</summary>
-    public static BillReading Parse(string json, IReadOnlyList<MarketPrice> marketPrices)
+    public static BillReading Parse(string json, IReadOnlyList<MarketPrice> marketPrices, IReadOnlyList<string> categories)
     {
         try
         {
             var extraction = JsonSerializer.Deserialize<BillExtraction>(json) ?? throw new BillReadFailedException("The bill reader returned nothing.");
-            var reading = extraction.ToReading(marketPrices.Select(m => m.Key).ToHashSet());
+            var reading = extraction.ToReading(marketPrices.Select(m => m.Key).ToHashSet(), categories);
             if (reading.Content.Items.Count == 0) throw new BillReadFailedException("No line items were found. Is this a bill?");
             return reading;
         }

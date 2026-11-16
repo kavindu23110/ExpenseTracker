@@ -25,15 +25,15 @@ public sealed class ClaudeCliBillReaderAdapter(string cliPath, IOptions<ClaudeOp
     }
 
     /// <inheritdoc />
-    public async Task<BillReading> ReadAsync(byte[] data, string contentType, string? langHint, IReadOnlyList<MarketPrice> marketPrices, CancellationToken ct)
+    public async Task<BillReading> ReadAsync(byte[] data, string contentType, string? langHint, IReadOnlyList<MarketPrice> marketPrices, IReadOnlyList<string> categories, CancellationToken ct)
     {
         var folder = Directory.CreateTempSubdirectory("expense-bill-");
         try
         {
             var fileName = "bill" + Extension(contentType);
             await File.WriteAllBytesAsync(Path.Combine(folder.FullName, fileName), data, ct);
-            var prompt = $"The bill is the file {fileName} in the current directory. Open it with the Read tool.\n\n{BillExtractionPrompt.Instruction(langHint, marketPrices)}";
-            return ParseOutput(await RunAsync(folder.FullName, prompt, ct), marketPrices);
+            var prompt = $"The bill is the file {fileName} in the current directory. Open it with the Read tool.\n\n{BillExtractionPrompt.Instruction(langHint, marketPrices, categories)}";
+            return ParseOutput(await RunAsync(folder.FullName, prompt, ct), marketPrices, categories);
         }
         finally
         {
@@ -105,7 +105,7 @@ public sealed class ClaudeCliBillReaderAdapter(string cliPath, IOptions<ClaudeOp
         }
     }
 
-    private BillReading ParseOutput(string output, IReadOnlyList<MarketPrice> marketPrices)
+    private BillReading ParseOutput(string output, IReadOnlyList<MarketPrice> marketPrices, IReadOnlyList<string> categories)
     {
         try
         {
@@ -117,7 +117,7 @@ public sealed class ClaudeCliBillReaderAdapter(string cliPath, IOptions<ClaudeOp
                 logger.LogError("Claude Code returned no bill: {Result}", root.TryGetProperty("result", out var result) ? result.ToString() : "(no result)");
                 throw new BillReadFailedException("Claude Code could not read this bill. You may have reached your plan's usage limit, or the file may not be a bill.");
             }
-            return BillExtractionParser.Parse(structured.GetRawText(), marketPrices);
+            return BillExtractionParser.Parse(structured.GetRawText(), marketPrices, categories);
         }
         catch (JsonException ex)
         {

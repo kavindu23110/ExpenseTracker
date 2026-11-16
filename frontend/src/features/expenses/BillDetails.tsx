@@ -41,7 +41,7 @@ export function BillDetails({ id, categories, onClose }: { id: number; categorie
   const [editing, setEditing] = useState(false);
   if (isError) return <Card label="Bill details"><p role="alert" className="text-sm text-warn">This bill could not be loaded.</p></Card>;
   if (!b) return <Card label="Bill details"><p role="status" className="text-sm text-muted">Loading bill…</p></Card>;
-  if (editing) return <Card label="Edit bill" className="gap-4"><h2 className="text-xl font-extrabold">Edit bill</h2><BillEditForm bill={b} onDone={() => setEditing(false)} /></Card>;
+  if (editing) return <Card label="Edit bill" className="gap-4"><h2 className="text-xl font-extrabold">Edit bill</h2><BillEditForm bill={b} categories={categories} onDone={() => setEditing(false)} /></Card>;
   const isSi = b.lang === "si";
   const fileUrl = `/api/bills/${b.id}/file`;
   return (

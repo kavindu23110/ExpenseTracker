@@ -13,6 +13,7 @@ public sealed class BillFilingService(IBillRepository bills, PantryService pantr
     public async Task<int> SaveAsync(SaveBillRequest r, UploadedFile? file, CancellationToken ct)
     {
         await categories.RequireAsync(r.Category, ct);
+        await RequireItemCategoriesAsync(r.Items, ct);
         var stored = file is null ? null : new BillFile(UploadGuard.Check(file, options.Value), file.Data);
         var content = new BillContent(
             r.Lang, r.Merchant, r.MerchantSi, r.Address, r.AddressSi, r.BillNo, ParseDate(r.Date), ParseTime(r.Time), r.Payment, r.PaymentSi, r.Paid,
@@ -20,7 +21,7 @@ public sealed class BillFilingService(IBillRepository bills, PantryService pantr
         var bill = Bill.Create(content, r.Merchant, content.Date, r.Amount, r.Category, scanned: !r.Manual, file?.FileName ?? r.FileName, stored);
         if ((await bills.GetAllAsync(ct)).Any(bill.IsDuplicateOf)) throw new DomainException($"This bill is already saved: {bill.Merchant}, {bill.Date:yyyy-MM-dd}.");
         await bills.AddAsync(bill, r.Category != r.SuggestedCategory ? r.Category : null, ct);
-        if (bill.Category == BillCategory.Groceries) await pantry.StockAsync(bill.Items, ct);
+        await pantry.StockBillAsync(bill, ct);
         return bill.Id;
     }
 
@@ -28,11 +29,18 @@ public sealed class BillFilingService(IBillRepository bills, PantryService pantr
     public async Task<bool> EditAsync(int id, EditBillRequest r, CancellationToken ct)
     {
         var date = ParseDate(r.Date);
+        await RequireItemCategoriesAsync(r.Items, ct);
         var preview = await bills.FindAsync(id, ct);
         if (preview is null) return false;
         preview.Edit(r.Merchant, date, r.Amount, r.Items.Select(i => i.ToDomain()).ToList());
         if ((await bills.GetAllAsync(ct)).Any(b => b.Id != id && b.IsDuplicateOf(preview))) throw new DomainException($"This would match a bill already saved: {preview.Merchant}, {preview.Date:yyyy-MM-dd}.");
         return await bills.UpdateAsync(id, b => b.Edit(r.Merchant, date, r.Amount, r.Items.Select(i => i.ToDomain()).ToList()), ct);
+    }
+
+    private async Task RequireItemCategoriesAsync(IEnumerable<BillItemDto> items, CancellationToken ct)
+    {
+        foreach (var category in items.Select(i => i.Category).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct())
+            await categories.RequireAsync(category!.Trim(), ct);
     }
 
     /// <inheritdoc />

@@ -31,10 +31,24 @@ export function PantryPage() {
     <>
       <div className="flex flex-col gap-1">
         <h1 className="text-[32px] font-extrabold tracking-[-0.02em]">Pantry</h1>
-        <p className="text-[15px] text-muted">Newly saved grocery bills add their items here. When something is used up, it goes on your To buy page.</p>
+        <p className="text-[15px] text-muted">Newly saved bills add items from the categories you choose below. When something is used up, it goes on your To buy page.</p>
       </div>
       {error && <p role="alert" className="rounded-[10px] bg-warn-soft px-4 py-3 text-sm font-semibold text-warn">{error}</p>}
       <div className="grid gap-6">
+        <Card label="Pantry categories" className="gap-3">
+          <h2 className={HEADING}>Categories that fill the pantry</h2>
+          <p className="text-sm text-muted">Items in these categories go into the pantry when you save a bill. An item&apos;s own category counts first, then the bill&apos;s.</p>
+          <div className="flex flex-wrap gap-2">
+            {data.categories.map((c) => {
+              const on = data.pantryCategories.includes(c);
+              return (
+                <button key={c} type="button" aria-pressed={on} disabled={change.busy}
+                  onClick={() => change.run(() => householdApi.setPantryCategories(on ? data.pantryCategories.filter((x) => x !== c) : [...data.pantryCategories, c]))}
+                  className={`min-h-11 rounded-full px-3.5 text-sm ${on ? "border-2 border-accent bg-accent font-bold text-white" : "border border-field bg-white font-semibold text-ink"}`}>{c}</button>
+              );
+            })}
+          </div>
+        </Card>
         <Card label="Pantry" className="gap-3">
           <h2 className={HEADING}>At home</h2>
           {data.pantry.length === 0 && <p className="text-[15px] text-muted">Nothing yet. Save a grocery bill or add an item.</p>}
