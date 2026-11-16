@@ -23,6 +23,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<SavingsGoal> SavingsGoals => Set<SavingsGoal>();
     public DbSet<RecurringBill> RecurringBills => Set<RecurringBill>();
     public DbSet<PantryItem> PantryItems => Set<PantryItem>();
+    public DbSet<ItemCategoryRule> ItemCategoryRules => Set<ItemCategoryRule>();
+    public DbSet<Settlement> Settlements => Set<Settlement>();
+    public DbSet<AlertDigest> AlertDigests => Set<AlertDigest>();
     public DbSet<ShoppingItem> ShoppingItems => Set<ShoppingItem>();
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<MarketPrice> MarketPrices => Set<MarketPrice>();
@@ -49,6 +52,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.FileName).HasMaxLength(260);
             e.Property(x => x.Amount).HasPrecision(18, 2);
             e.Property(x => x.Paid).HasPrecision(18, 2);
+            e.Property(x => x.PaidBy).HasMaxLength(50);
             e.HasIndex(x => x.Date);
             e.HasOne(x => x.File).WithOne().HasForeignKey<BillFile>(f => f.BillId).OnDelete(DeleteBehavior.Cascade);
             e.OwnsMany(x => x.Items, i =>
@@ -139,6 +143,29 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             e.Property(x => x.Unit).HasMaxLength(20);
             e.Property(x => x.Qty).HasPrecision(18, 3);
             e.Ignore(x => x.IsOut);
+            e.Ignore(x => x.IsLow);
+            e.Property(x => x.Location).HasMaxLength(PantryItem.MaxLocationLength);
+            e.Property(x => x.LowAt).HasPrecision(18, 3);
+        });
+
+        b.Entity<ItemCategoryRule>(e =>
+        {
+            e.HasKey(x => x.Key);
+            e.Property(x => x.Key).HasMaxLength(200);
+            e.Property(x => x.Category).HasMaxLength(BillCategory.MaxLength);
+        });
+
+        b.Entity<Settlement>(e =>
+        {
+            e.Property(x => x.From).HasMaxLength(50);
+            e.Property(x => x.To).HasMaxLength(50);
+            e.Property(x => x.Amount).HasPrecision(18, 2);
+        });
+
+        b.Entity<AlertDigest>(e =>
+        {
+            e.HasKey(x => x.Day);
+            e.Property(x => x.Day).HasMaxLength(10);
         });
 
         b.Entity<ShoppingItem>(e =>

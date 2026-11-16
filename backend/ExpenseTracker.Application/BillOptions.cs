@@ -11,4 +11,7 @@ public sealed class BillOptions
     public decimal AboveMarketTolerancePercent { get; set; } = 5;
     public decimal TotalMismatchTolerance { get; set; } = 1;
     public string TimeZone { get; set; } = "Asia/Colombo";
+
+    /// <summary>Local hour from which the daily WhatsApp reminders are sent.</summary>
+    public int AlertHour { get; set; } = 8;
 }

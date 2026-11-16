@@ -8,6 +8,7 @@ import { money, money2, qtyLabel } from "@/lib/format";
 import type { BillDraft } from "@/lib/types";
 import { ItemName } from "./ItemName";
 import { ItemCategorySelect } from "./ItemCategorySelect";
+import { PaidBySelect } from "./PaidBySelect";
 import { ReceiptPreview } from "./ReceiptPreview";
 
 /** Lets the user check and correct what was read, then save it. */
@@ -22,12 +23,13 @@ export function ScanReview({ draft, onChange, file, previewUrl, categories, onDi
 }) {
   const [amount, setAmount] = useState(draft.amount.toFixed(2));
   const [category, setCategory] = useState(draft.suggestion.category);
+  const [paidBy, setPaidBy] = useState("");
   const isSi = draft.lang === "si";
   const parsedAmount = parseFloat(amount.replace(/[^0-9.]/g, "")) || 0;
   const change = draft.paid != null ? draft.paid - parsedAmount : null;
 
   const save = useMutation({
-    mutationFn: () => api.saveBill({ ...draft, amount: parsedAmount, category, suggestedCategory: draft.suggestion.category }, file),
+    mutationFn: () => api.saveBill({ ...draft, amount: parsedAmount, category, suggestedCategory: draft.suggestion.category, paidBy: paidBy || null }, file),
     onSuccess: ({ id }) => onSaved(id, `Saved ${money(parsedAmount)} at ${draft.merchant} under ${category}, with ${draft.items.length} line items${isSi ? " translated from Sinhala." : "."}`),
   });
 
@@ -85,6 +87,7 @@ export function ScanReview({ draft, onChange, file, previewUrl, categories, onDi
           </div>
 
           <div className="flex flex-col gap-2">
+            <PaidBySelect id="scan-paid-by" value={paidBy} onChange={setPaidBy} defaultToMe />
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span id="cat-label" className="text-[13px] font-bold text-ink-2">Category</span>
               <span className="text-[13px] font-semibold text-accent-ink">Suggested {draft.suggestion.category} · {draft.suggestion.confidence}% sure</span>

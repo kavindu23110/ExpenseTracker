@@ -24,7 +24,7 @@ public sealed class PlanningService(
         var now = today.Today;
         var limits = (await budgets.ListAsync(ct)).ToDictionary(b => b.Category, b => b.MonthlyLimit);
         var spent = (await billHistory.GetAllAsync(ct)).Where(b => b.Date.Year == now.Year && b.Date.Month == now.Month)
-            .GroupBy(b => b.Category).ToDictionary(g => g.Key, g => g.Sum(b => b.Amount));
+            .SelectMany(b => b.AmountByCategory()).GroupBy(c => c.Category).ToDictionary(g => g.Key, g => g.Sum(c => c.Amount));
         var all = await categories.AllAsync(ct);
         var rows = all.Select(c =>
         {
@@ -38,7 +38,9 @@ public sealed class PlanningService(
         var billRows = (await recurring.ListAsync(ct)).OrderBy(b => b.DueDate(now))
             .Select(b => new RecurringBillDto(b.Id, b.Name, b.Amount, b.DayOfMonth, b.Category, b.DueDate(now).ToString("yyyy-MM-dd"), b.Status(now, reminderDays))).ToList();
         return new PlanningDto(now.ToString("yyyy-MM"), all, rows, goalRows, billRows,
-            billRows.Count(b => b.Status is RecurringBill.Overdue or RecurringBill.DueSoon), await categories.CustomAsync(ct));
+            billRows.Count(b => b.Status is RecurringBill.Overdue or RecurringBill.DueSoon), await categories.CustomAsync(ct),
+            SubscriptionFinder.Find(await billHistory.GetAllAsync(ct), billRows.Select(b => b.Name), now)
+                .Select(s => new SubscriptionDto(s.Merchant, s.Amount, s.DayOfMonth, s.Category, s.Months)).ToList());
     }
 
     /// <summary>Sets or removes a category's budget.</summary>

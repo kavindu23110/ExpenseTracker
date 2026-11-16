@@ -120,6 +120,26 @@ function AddBill({ categories }: { categories: string[] }) {
   );
 }
 
+function Subscriptions({ items }: { items: Planning["subscriptions"] }) {
+  const add = useSaveAction((s: Planning["subscriptions"][number]) => householdApi.addRecurring(s.merchant, s.amount, s.dayOfMonth, s.category));
+  if (items.length === 0) return null;
+  return (
+    <Card label="Possible subscriptions" className="gap-3">
+      <div className="flex flex-col gap-0.5">
+        <h2 className={HEADING}>Looks like a monthly charge</h2>
+        <p className="text-[13px] text-muted">These shops charged about the same amount once a month for a few months. Add one as a recurring bill to get reminders, or cancel it if you no longer use it.</p>
+      </div>
+      {items.map((s) => (
+        <div key={s.merchant} className="flex flex-wrap items-center justify-between gap-2 border-b border-line-soft pb-3 text-sm">
+          <span className="min-w-0"><strong>{s.merchant}</strong> · Rs {s.amount.toLocaleString()} around day {s.dayOfMonth} · {s.months} months</span>
+          <button type="button" disabled={add.busy} onClick={() => add.run(s)} className={BUTTON}>Add as recurring bill</button>
+        </div>
+      ))}
+      {add.error && <p role="alert" className="text-sm font-semibold text-warn">{add.error}</p>}
+    </Card>
+  );
+}
+
 function Content({ data }: { data: Planning }) {
   const attention = data.bills.filter((b) => b.status === "overdue" || b.status === "dueSoon");
   return (
@@ -145,6 +165,7 @@ function Content({ data }: { data: Planning }) {
             {data.bills.length === 0 ? <p className="text-[15px] text-muted">No recurring bills yet.</p> : <div>{data.bills.map((b) => <BillLine key={b.id} bill={b} />)}</div>}
             <AddBill categories={data.categories} />
           </Card>
+          <Subscriptions items={data.subscriptions} />
           <Categories custom={data.customCategories} />
           <Card label="Savings goals" className="gap-3">
             <div className="flex flex-col gap-0.5">

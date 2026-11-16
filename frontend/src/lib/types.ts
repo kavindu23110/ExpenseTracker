@@ -10,6 +10,8 @@ export interface BillItem {
   amount: number;
   /** The item's own category; null follows the bill. */
   category?: string | null;
+  /** True when the category came from an earlier pick for this item. */
+  remembered?: boolean;
   /** The scan's guess, shown as a hint until the user picks. */
   suggestedCategory?: string | null;
 }
@@ -55,6 +57,7 @@ export interface BillDetail {
   fileContentType: string | null;
   items: BillItem[];
   charges: BillCharge[];
+  paidBy: string | null;
 }
 
 /** A scanned bill waiting to be checked. */

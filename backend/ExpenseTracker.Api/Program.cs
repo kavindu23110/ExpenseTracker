@@ -15,6 +15,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddSingleton(Channel.CreateUnbounded<WhatsAppInbound>());
 builder.Services.AddHostedService<WhatsAppWorker>();
+builder.Services.AddHostedService<AlertWorker>();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(o =>

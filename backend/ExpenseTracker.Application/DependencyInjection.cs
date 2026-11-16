@@ -26,6 +26,8 @@ public static class DependencyInjection
         services.AddScoped<WhatsAppSettingsService>();
         services.AddSingleton<WhatsAppActivity>();
         services.AddScoped<PantryService>();
+        services.AddScoped<BalanceService>();
+        services.AddScoped<AlertService>();
         services.AddScoped<AuthService>();
         services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
         return services;

@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { money2 } from "@/lib/format";
 import type { BillDetail, BillItem } from "@/lib/types";
 import { ItemCategorySelect } from "./ItemCategorySelect";
+import { PaidBySelect } from "./PaidBySelect";
 
 type Line = BillItem & { qtyText: string; priceText: string };
 
@@ -16,6 +17,7 @@ export function BillEditForm({ bill, categories, onDone }: { bill: BillDetail; c
   const queryClient = useQueryClient();
   const [merchant, setMerchant] = useState(bill.merchant);
   const [date, setDate] = useState(bill.date);
+  const [paidBy, setPaidBy] = useState(bill.paidBy ?? "");
   const [total, setTotal] = useState(String(bill.amount));
   const [lines, setLines] = useState<Line[]>(bill.items.map((i) => ({ ...i, qtyText: String(i.qty), priceText: String(i.price) })));
   const charges = bill.charges.reduce((sum, c) => sum + c.amount, 0);
@@ -27,6 +29,7 @@ export function BillEditForm({ bill, categories, onDone }: { bill: BillDetail; c
       merchant,
       date,
       amount: bill.scanned ? parseFloat(total) : computed,
+      paidBy: paidBy || null,
       items: lines.map((l) => ({ name: l.name, nameSi: l.nameSi, qty: parseFloat(l.qtyText), price: parseFloat(l.priceText), unit: l.unit?.trim() || null, markedPrice: l.markedPrice, marketKey: l.marketKey, amount: 0, category: l.category ?? null })),
     }),
     onSuccess: async () => {
@@ -40,6 +43,7 @@ export function BillEditForm({ bill, categories, onDone }: { bill: BillDetail; c
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <TextField id={`e-shop-${bill.id}`} label="Shop" required value={merchant} onChange={(e) => setMerchant(e.target.value)} />
         <TextField id={`e-date-${bill.id}`} label="Date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+        <PaidBySelect id={`e-paid-by-${bill.id}`} value={paidBy} onChange={setPaidBy} />
       </div>
       {lines.map((l, i) => (
         <fieldset key={i} className="grid grid-cols-3 items-end gap-3 rounded-[10px] border border-line-soft bg-[#f8fafb] p-3">

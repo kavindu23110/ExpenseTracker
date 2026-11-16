@@ -1,5 +1,6 @@
 using ExpenseTracker.Application.Models;
 using ExpenseTracker.Application.Ports;
+using ExpenseTracker.Domain;
 using ExpenseTracker.Domain.Bills;
 using ExpenseTracker.Domain.Household;
 
@@ -8,12 +9,15 @@ namespace ExpenseTracker.Application.Services;
 /// <summary>The pantry and shopping list.</summary>
 public sealed class PantryService(IStore<PantryItem> pantry, IStore<ShoppingItem> shopping, IBillRepository bills, IItemMappingRepository mappings, IStore<ToBuyMonthlyFill> fills, IStore<PantryCategory> pantryCategories, CategoryService categories, ITodayProvider today)
 {
+    /// <summary>Items expiring within this many days are flagged.</summary>
+    public const int ExpirySoonDays = 3;
+
     /// <summary>Loads both lists, first filling the shopping list if this month has not been filled.</summary>
     public async Task<PantryDto> GetAsync(CancellationToken ct)
     {
         await FillForMonthAsync(ct);
         return new(
-        (await pantry.ListAsync(ct)).OrderBy(p => p.IsOut).ThenBy(p => p.Name).Select(p => new PantryItemDto(p.Id, p.Name, p.Qty, p.Unit, p.IsOut)).ToList(),
+        (await pantry.ListAsync(ct)).OrderBy(p => p.IsOut).ThenBy(p => p.Name).Select(p => new PantryItemDto(p.Id, p.Name, p.Qty, p.Unit, p.IsOut, p.Expiry?.ToString("yyyy-MM-dd"), p.Location, p.LowAt, p.IsLow, p.ExpiresBy(today.Today.AddDays(ExpirySoonDays)))).ToList(),
         (await shopping.ListAsync(ct)).OrderBy(s => s.Done).ThenBy(s => s.Name).Select(s => new ShoppingItemDto(s.Id, s.Name, s.Done, s.Qty, s.Unit)).ToList(),
         await categories.AllAsync(ct),
         await PantryCategoryNamesAsync(ct));
@@ -97,7 +101,7 @@ public sealed class PantryService(IStore<PantryItem> pantry, IStore<ShoppingItem
     {
         if (await pantry.FindAsync(id, ct) is not { } item) return false;
         item.Adjust(change);
-        if (item.IsOut) await AddToListAsync(item.Key, item.Name, ct);
+        if (change < 0 && (item.IsOut || item.IsLow)) await AddToListAsync(item.Key, item.Name, ct);
         await pantry.SaveAsync(ct);
         return true;
     }
@@ -107,7 +111,23 @@ public sealed class PantryService(IStore<PantryItem> pantry, IStore<ShoppingItem
     {
         if (await pantry.FindAsync(id, ct) is not { } item) return false;
         item.SetQty(qty);
-        if (item.IsOut) await AddToListAsync(item.Key, item.Name, ct);
+        if (item.IsOut || item.IsLow) await AddToListAsync(item.Key, item.Name, ct);
+        await pantry.SaveAsync(ct);
+        return true;
+    }
+
+    /// <summary>Sets an item's expiry, place and low level; already low puts it on the list. False when missing.</summary>
+    public async Task<bool> SetDetailsAsync(int id, SetPantryDetailsRequest r, CancellationToken ct)
+    {
+        if (await pantry.FindAsync(id, ct) is not { } item) return false;
+        DateOnly? expiry = null;
+        if (!string.IsNullOrWhiteSpace(r.Expiry))
+        {
+            if (!DateOnly.TryParseExact(r.Expiry, "yyyy-MM-dd", out var d)) throw new DomainException("Enter the expiry as a date.");
+            expiry = d;
+        }
+        item.SetDetails(expiry, r.Location, r.LowAt);
+        if (item.IsLow) await AddToListAsync(item.Key, item.Name, ct);
         await pantry.SaveAsync(ct);
         return true;
     }

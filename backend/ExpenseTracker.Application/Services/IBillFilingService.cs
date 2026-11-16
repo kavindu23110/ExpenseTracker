@@ -20,4 +20,7 @@ public interface IBillFilingService
 
     /// <summary>Returns a bill's original file.</summary>
     Task<BillFile?> GetFileAsync(int id, CancellationToken ct);
+
+    /// <summary>Every bill line in a date range as CSV, one row per item or charge.</summary>
+    Task<string> ExportCsvAsync(DateOnly? from, DateOnly? to, CancellationToken ct);
 }

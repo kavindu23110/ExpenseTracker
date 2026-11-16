@@ -80,6 +80,10 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("PaidBy")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Payment")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -129,6 +133,22 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                     b.ToTable("BillFiles");
                 });
 
+            modelBuilder.Entity("ExpenseTracker.Domain.Bills.ItemCategoryRule", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("ItemCategoryRules");
+                });
+
             modelBuilder.Entity("ExpenseTracker.Domain.Bills.ItemMapping", b =>
                 {
                     b.Property<string>("KeyA")
@@ -161,6 +181,17 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                     b.HasKey("Merchant");
 
                     b.ToTable("LearnedMerchants");
+                });
+
+            modelBuilder.Entity("ExpenseTracker.Domain.Household.AlertDigest", b =>
+                {
+                    b.Property<string>("Day")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Day");
+
+                    b.ToTable("AlertDigests");
                 });
 
             modelBuilder.Entity("ExpenseTracker.Domain.Household.AppUser", b =>
@@ -247,10 +278,21 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateOnly?>("Expiry")
+                        .HasColumnType("date");
+
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<decimal?>("LowAt")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -330,6 +372,36 @@ namespace ExpenseTracker.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SavingsGoals");
+                });
+
+            modelBuilder.Entity("ExpenseTracker.Domain.Household.Settlement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("From")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("To")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Settlements");
                 });
 
             modelBuilder.Entity("ExpenseTracker.Domain.Household.ShoppingItem", b =>

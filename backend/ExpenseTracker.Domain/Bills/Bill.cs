@@ -99,6 +99,12 @@ public sealed class Bill
         return bill;
     }
 
+    /// <summary>The member who paid; null when not recorded.</summary>
+    public string? PaidBy { get; private set; }
+
+    /// <summary>Records who paid; blank clears it.</summary>
+    public void SetPaidBy(string? member) => PaidBy = string.IsNullOrWhiteSpace(member) ? null : member.Trim();
+
     /// <summary>Sum of the line items.</summary>
     public decimal Subtotal => Money.Round(_items.Sum(i => i.LineAmount));
 

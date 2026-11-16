@@ -18,6 +18,23 @@ function QtyEditor({ name, qty, unit, busy, onSave }: { name: string; qty: numbe
   );
 }
 
+type PantryRow = { id: number; name: string; expiry: string | null; location: string | null; lowAt: number | null };
+
+function DetailsEditor({ item, busy, onSave }: { item: PantryRow; busy: boolean; onSave: (expiry: string, location: string, lowAt: number | null) => void }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ expiry: item.expiry ?? "", location: item.location ?? "", lowAt: item.lowAt == null ? "" : String(item.lowAt) });
+  if (!open) return <button type="button" aria-label={`Details for ${item.name}`} onClick={() => setOpen(true)} className={BUTTON}>Details</button>;
+  return (
+    <form className="flex w-full flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); onSave(form.expiry, form.location, form.lowAt === "" ? null : Number(form.lowAt)); setOpen(false); }}>
+      <label className={LABEL}>Expires<input type="date" value={form.expiry} onChange={(e) => setForm({ ...form, expiry: e.target.value })} className={INPUT} /></label>
+      <label className={LABEL}>Kept in<input list="pantry-places" maxLength={40} placeholder="Fridge" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={`${INPUT} w-32`} /></label>
+      <label className={LABEL}>Buy again at<input type="number" min="0" step="any" placeholder="1" value={form.lowAt} onChange={(e) => setForm({ ...form, lowAt: e.target.value })} className={`${INPUT} w-24`} /></label>
+      <button type="submit" disabled={busy} className={PRIMARY}>Save</button>
+      <button type="button" onClick={() => setOpen(false)} className={BUTTON}>Cancel</button>
+    </form>
+  );
+}
+
 /** What is at home; grocery bills fill the pantry automatically. */
 export function PantryPage() {
   const { data, isError } = useQuery({ queryKey: ["pantry"], queryFn: householdApi.pantry });
@@ -51,15 +68,17 @@ export function PantryPage() {
         </Card>
         <Card label="Pantry" className="gap-3">
           <h2 className={HEADING}>At home</h2>
+          <datalist id="pantry-places"><option value="Pantry" /><option value="Fridge" /><option value="Freezer" /></datalist>
           {data.pantry.length === 0 && <p className="text-[15px] text-muted">Nothing yet. Save a grocery bill or add an item.</p>}
           {data.pantry.map((p) => (
             <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-line-soft pb-3">
-              <span className="flex min-w-0 flex-wrap items-center gap-2 text-sm"><strong>{p.name}</strong>{p.isOut && <Badge tone="bad">Out</Badge>}</span>
+              <span className="flex min-w-0 flex-wrap items-center gap-2 text-sm"><strong>{p.name}</strong>{p.isOut && <Badge tone="bad">Out</Badge>}{p.isLow && <Badge tone="bad">Low</Badge>}{p.expiresSoon && <Badge tone="bad">Expires {p.expiry}</Badge>}{!p.expiresSoon && p.expiry && !p.isOut && <span className="text-muted">Expires {p.expiry}</span>}{p.location && <Badge tone="neutral">{p.location}</Badge>}</span>
               <QtyEditor key={p.qty} name={p.name} qty={p.qty} unit={p.unit} busy={change.busy} onSave={(qty) => change.run(() => householdApi.setPantryQty(p.id, qty))} />
               <span className="flex flex-wrap gap-1.5">
                 <button type="button" aria-label={`One more ${p.name}`} disabled={change.busy} onClick={() => change.run(() => householdApi.adjustPantry(p.id, 1))} className={BUTTON}>+1</button>
                 <button type="button" aria-label={`One less ${p.name}`} disabled={change.busy || p.isOut} onClick={() => change.run(() => householdApi.adjustPantry(p.id, -1))} className={BUTTON}>−1</button>
                 <button type="button" aria-label={`Used up ${p.name}`} disabled={change.busy || p.isOut} onClick={() => change.run(() => householdApi.useUpPantry(p.id))} className={BUTTON}>Used up</button>
+                <DetailsEditor item={p} busy={change.busy} onSave={(expiry, location, lowAt) => change.run(() => householdApi.setPantryDetails(p.id, expiry, location, lowAt))} />
                 <button type="button" aria-label={`Delete ${p.name}`} disabled={change.busy} onClick={() => { if (window.confirm(`Delete ${p.name} from the pantry?`)) change.run(() => householdApi.removePantry(p.id)); }} className={BUTTON}>Delete</button>
               </span>
             </div>

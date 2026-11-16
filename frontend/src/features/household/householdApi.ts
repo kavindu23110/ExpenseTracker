@@ -1,5 +1,5 @@
 import { ApiError } from "@/lib/api";
-import type { Member, Pantry, Planning, PriceHistoryRow, Session, Statistics, ToBuySuggestion, WhatsAppStatus } from "./types";
+import type { Alert, Balances, Member, Pantry, Planning, PriceHistoryRow, Session, Statistics, ToBuySuggestion, WhatsAppStatus } from "./types";
 
 async function call<T>(url: string, method = "GET", body?: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -46,6 +46,11 @@ export const householdApi = {
   prices: () => call<PriceHistoryRow[]>("/api/prices"),
 
   pantry: () => call<Pantry>("/api/pantry"),
+  setPantryDetails: (id: number, expiry: string, location: string, lowAt: number | null) => call<void>(`/api/pantry/${id}/details`, "PUT", { expiry: expiry || null, location, lowAt }),
+  balances: () => call<Balances>("/api/balances"),
+  addSettlement: (from: string, to: string, amount: number) => call<void>("/api/settlements", "POST", { from, to, amount }),
+  removeSettlement: (id: number) => call<void>(`/api/settlements/${id}`, "DELETE"),
+  alerts: () => call<Alert[]>("/api/alerts"),
   setPantryCategories: (categories: string[]) => call<void>("/api/pantry/categories", "PUT", { categories }),
   addPantry: (name: string, qty: number, unit: string) => call<void>("/api/pantry", "POST", { name, qty, unit }),
   adjustPantry: (id: number, change: number) => call<void>(`/api/pantry/${id}/adjust`, "POST", { change }),

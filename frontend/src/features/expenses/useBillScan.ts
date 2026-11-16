@@ -38,7 +38,7 @@ export function useBillScan() {
       const result = await read();
       if (id !== run.current) return;
       // Items follow the bill until the user picks; the scan's guess is only a hint.
-      setDraft({ ...result.draft, items: result.draft.items.map((it) => ({ ...it, category: null, suggestedCategory: it.category ?? null })) });
+      setDraft({ ...result.draft, items: result.draft.items.map((it) => (it.remembered ? it : { ...it, category: null, suggestedCategory: it.category ?? null })) });
       setFile(result.file);
       setPreviewUrl(result.preview);
       setStage("review");

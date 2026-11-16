@@ -66,6 +66,7 @@ export function BillDetails({ id, categories, onClose }: { id: number; categorie
         <Fact label="Bill no." mono>{b.billNo ?? "—"}</Fact>
         <Fact label="Date & time">{shortDate(b.date)} {b.date.slice(0, 4)}{b.time ? `, ${b.time}` : ""}</Fact>
         <Fact label="Paid with">{b.payment ?? "—"}</Fact>
+        <Fact label="Paid by">{b.paidBy ?? "—"}</Fact>
         <CategoryPicker id={b.id} value={b.category} categories={categories} />
       </dl>
 

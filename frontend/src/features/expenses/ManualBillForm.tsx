@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { money, money2 } from "@/lib/format";
 import { householdApi } from "@/features/household/householdApi";
 import { ItemCategorySelect } from "./ItemCategorySelect";
+import { PaidBySelect } from "./PaidBySelect";
 
 const EMPTY_LINE: { name: string; qty: string; unit: string; price: string; category: string | null } = { name: "", qty: "1", unit: "", price: "", category: null };
 
@@ -29,6 +30,7 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
   const queryClient = useQueryClient();
   const [added, setAdded] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState<string | null>(null);
+  const [paidBy, setPaidBy] = useState("");
   const addCategory = useMutation({
     mutationFn: (name: string) => householdApi.addCategory(name),
     onSuccess: (_, name) => {
@@ -45,7 +47,7 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
   const save = useMutation({
     mutationFn: () => {
       const items = lines.filter((l) => l.name.trim()).map((l) => ({ name: l.name.trim(), qty: parseFloat(l.qty), price: parseFloat(l.price), unit: l.unit.trim() || null, category: l.category }));
-      return api.saveBill({ lang: "en", merchant, date, amount, category, suggestedCategory: category, manual: true, items, charges: [] }, null);
+      return api.saveBill({ lang: "en", merchant, date, amount, category, suggestedCategory: category, manual: true, items, charges: [], paidBy: paidBy || null }, null);
     },
     onSuccess: ({ id }) => onSaved(id, `Saved ${money(amount)} at ${merchant} under ${category}.`),
   });
@@ -60,6 +62,7 @@ export function ManualBillForm({ categories, onCancel, onSaved }: {
         <TextField id="m-shop" label="Shop" required value={merchant} onChange={(e) => setMerchant(e.target.value)} />
         <TextField id="m-date" label="Date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
         <SelectField id="m-category" label="Category" value={category} onChange={setCategory} options={[...categories, ...added.filter((c) => !categories.includes(c))].map((c) => ({ value: c, label: c }))} />
+        <PaidBySelect id="m-paid-by" value={paidBy} onChange={setPaidBy} defaultToMe />
       </div>
       {newCategory === null ? (
         <button type="button" onClick={() => { addCategory.reset(); setNewCategory(""); }} className="min-h-11 self-start rounded-[10px] border border-field bg-white px-4 text-sm font-semibold">New category</button>

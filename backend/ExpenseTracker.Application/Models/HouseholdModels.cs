@@ -10,7 +10,10 @@ public sealed record SavingsGoalDto(int Id, string Name, decimal Target, string 
 public sealed record RecurringBillDto(int Id, string Name, decimal Amount, int DayOfMonth, string Category, string DueDate, string Status);
 
 /// <summary>Everything on the planning page.</summary>
-public sealed record PlanningDto(string Month, IReadOnlyList<string> Categories, IReadOnlyList<BudgetRowDto> Budgets, IReadOnlyList<SavingsGoalDto> Goals, IReadOnlyList<RecurringBillDto> Bills, int RemindersDue, IReadOnlyList<string> CustomCategories);
+public sealed record PlanningDto(string Month, IReadOnlyList<string> Categories, IReadOnlyList<BudgetRowDto> Budgets, IReadOnlyList<SavingsGoalDto> Goals, IReadOnlyList<RecurringBillDto> Bills, int RemindersDue, IReadOnlyList<string> CustomCategories, IReadOnlyList<SubscriptionDto> Subscriptions);
+
+/// <summary>A shop that looks like a monthly charge.</summary>
+public sealed record SubscriptionDto(string Merchant, decimal Amount, int DayOfMonth, string Category, int Months);
 
 /// <summary>Sets a budget; no limit removes it.</summary>
 public sealed record AddCategoryRequest(string? Name);
@@ -40,7 +43,10 @@ public sealed record ShopPriceDto(string Shop, decimal Price, string Date);
 public sealed record PriceHistoryDto(string Name, string? NameSi, string? Unit, IReadOnlyList<PricePointDto> Points, decimal ChangePercent, IReadOnlyList<ShopPriceDto> Shops);
 
 /// <summary>A pantry line.</summary>
-public sealed record PantryItemDto(int Id, string Name, decimal Qty, string? Unit, bool IsOut);
+public sealed record PantryItemDto(int Id, string Name, decimal Qty, string? Unit, bool IsOut, string? Expiry, string? Location, decimal? LowAt, bool IsLow, bool ExpiresSoon);
+
+/// <summary>A pantry item's expiry, place and low level; blanks clear them.</summary>
+public sealed record SetPantryDetailsRequest(string? Expiry, string? Location, decimal? LowAt);
 
 /// <summary>A shopping list line.</summary>
 public sealed record ShoppingItemDto(int Id, string Name, bool Done, decimal? Qty, string? Unit);
@@ -95,3 +101,21 @@ public sealed record StatisticsMonthDto(string Month, decimal Total, int BillCou
 
 /// <summary>The statistics page.</summary>
 public sealed record StatisticsDto(decimal? AveragePerMonth, IReadOnlyList<StatisticsMonthDto> Months);
+
+/// <summary>One member's paid amount, fair share and balance.</summary>
+public sealed record MemberBalanceDto(string Member, decimal Paid, decimal Share, decimal Balance);
+
+/// <summary>A payment that would even everyone up.</summary>
+public sealed record SuggestedPaymentDto(string From, string To, decimal Amount);
+
+/// <summary>A recorded payment between members.</summary>
+public sealed record SettlementDto(int Id, string From, string To, decimal Amount, string Date);
+
+/// <summary>Who owes whom.</summary>
+public sealed record BalancesDto(IReadOnlyList<MemberBalanceDto> Members, IReadOnlyList<SuggestedPaymentDto> Payments, IReadOnlyList<SettlementDto> Settlements);
+
+/// <summary>Records money given from one member to another.</summary>
+public sealed record AddSettlementRequest(string From, string To, decimal Amount);
+
+/// <summary>Something that needs attention.</summary>
+public sealed record AlertDto(string Kind, string Text);

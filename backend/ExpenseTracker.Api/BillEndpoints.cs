@@ -39,6 +39,14 @@ public static class BillEndpoints
             return Results.Created($"/api/bills/{id}", new { id });
         });
 
+        api.MapGet("/bills/export", async (DateOnly? from, DateOnly? to, IBillFilingService s, CancellationToken ct) =>
+        {
+            var csv = await s.ExportCsvAsync(from, to, ct);
+            // A byte order mark lets Excel read Sinhala text correctly.
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(csv)).ToArray();
+            return Results.File(bytes, "text/csv; charset=utf-8", $"bills-{from?.ToString("yyyy-MM-dd") ?? "start"}-to-{to?.ToString("yyyy-MM-dd") ?? "now"}.csv");
+        });
+
         api.MapPut("/bills/{id:int}", async (int id, EditBillRequest r, IBillFilingService s, CancellationToken ct) =>
             await s.EditAsync(id, r, ct) ? Results.NoContent() : Results.NotFound());
 

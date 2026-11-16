@@ -6,7 +6,9 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { monthYear } from "@/lib/format";
 import { NO_FILTERS, type Filters } from "@/lib/types";
+import { AlertsBanner } from "./AlertsBanner";
 import { CategoryBreakdown } from "./CategoryBreakdown";
+import { ExportBills } from "./ExportBills";
 import { FilterBar } from "./FilterBar";
 import { ItemTotals } from "./ItemTotals";
 import { PriceWatch } from "./PriceWatch";
@@ -67,6 +69,7 @@ export function ExpensesPage() {
           </label>
         </header>
 
+        <AlertsBanner />
         <FilterBar filters={filters} onChange={setFilters} data={data} />
         <SummaryCards data={data} />
 
@@ -78,6 +81,7 @@ export function ExpensesPage() {
           </div>
           <div className="flex min-w-0 flex-[1_1_340px] flex-col gap-6">
             <CategoryBreakdown data={data} />
+            <ExportBills />
           </div>
         </div>
 

@@ -14,7 +14,20 @@ export interface Goal { id: number; name: string; target: number; dueDate: strin
 export interface RecurringBill { id: number; name: string; amount: number; dayOfMonth: number; category: string; dueDate: string; status: "paid" | "overdue" | "dueSoon" | "upcoming" }
 
 /** The planning page. */
-export interface Planning { month: string; categories: string[]; budgets: BudgetRow[]; goals: Goal[]; bills: RecurringBill[]; remindersDue: number; customCategories: string[] }
+export interface Planning { month: string; categories: string[]; budgets: BudgetRow[]; goals: Goal[]; bills: RecurringBill[]; remindersDue: number; customCategories: string[]; subscriptions: Subscription[] }
+
+/** A shop that looks like a monthly charge. */
+export interface Subscription { merchant: string; amount: number; dayOfMonth: number; category: string; months: number }
+
+/** Who owes whom. */
+export interface Balances {
+  members: { member: string; paid: number; share: number; balance: number }[];
+  payments: { from: string; to: string; amount: number }[];
+  settlements: { id: number; from: string; to: string; amount: number; date: string }[];
+}
+
+/** Something that needs attention. */
+export interface Alert { kind: "budget" | "bill" | "expiry"; text: string }
 
 /** A product's price over time. */
 export interface PriceHistoryRow {
@@ -31,7 +44,7 @@ export interface ToBuySuggestion { name: string; nameSi: string | null; qty: num
 
 /** The pantry and shopping list. */
 export interface Pantry {
-  pantry: { id: number; name: string; qty: number; unit: string | null; isOut: boolean }[];
+  pantry: { id: number; name: string; qty: number; unit: string | null; isOut: boolean; expiry: string | null; location: string | null; lowAt: number | null; isLow: boolean; expiresSoon: boolean }[];
   shopping: { id: number; name: string; done: boolean; qty: number | null; unit: string | null }[];
   categories: string[];
   pantryCategories: string[];

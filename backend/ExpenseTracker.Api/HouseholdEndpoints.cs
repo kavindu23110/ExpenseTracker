@@ -24,6 +24,11 @@ public static class HouseholdEndpoints
         api.MapGet("/prices", (PriceHistoryService s, CancellationToken ct) => s.GetAsync(ct));
 
         api.MapGet("/pantry", (PantryService s, CancellationToken ct) => s.GetAsync(ct));
+        api.MapPut("/pantry/{id:int}/details", async (int id, SetPantryDetailsRequest r, PantryService s, CancellationToken ct) => Done(await s.SetDetailsAsync(id, r, ct)));
+        api.MapGet("/balances", (BalanceService s, CancellationToken ct) => s.GetAsync(ct));
+        api.MapPost("/settlements", async (AddSettlementRequest r, BalanceService s, CancellationToken ct) => { await s.AddAsync(r, ct); return Results.NoContent(); });
+        api.MapDelete("/settlements/{id:int}", async (int id, BalanceService s, CancellationToken ct) => Done(await s.RemoveAsync(id, ct)));
+        api.MapGet("/alerts", (AlertService s, CancellationToken ct) => s.GetAsync(ct));
         api.MapPut("/pantry/categories", async (SetPantryCategoriesRequest r, PantryService s, CancellationToken ct) => { await s.SetPantryCategoriesAsync(r.Categories, ct); return Results.NoContent(); });
         api.MapPost("/pantry", async (AddPantryRequest r, PantryService s, CancellationToken ct) => { await s.AddAsync(r, ct); return Results.NoContent(); });
         api.MapPost("/pantry/{id:int}/adjust", async (int id, AdjustPantryRequest r, PantryService s, CancellationToken ct) => Done(await s.AdjustAsync(id, r.Change, ct)));

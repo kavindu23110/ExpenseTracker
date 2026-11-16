@@ -22,6 +22,34 @@ public sealed class PantryItem
     public decimal Qty { get; private set; }
     public string? Unit { get; private set; }
 
+    public const int MaxLocationLength = 40;
+
+    /// <summary>When it goes off; null when not tracked.</summary>
+    public DateOnly? Expiry { get; private set; }
+
+    /// <summary>Where it is kept, such as Fridge or Freezer.</summary>
+    public string? Location { get; private set; }
+
+    /// <summary>The quantity at or below which it should be bought again.</summary>
+    public decimal? LowAt { get; private set; }
+
+    /// <summary>True when some is left but no more than the low level.</summary>
+    public bool IsLow => !IsOut && LowAt is { } low && Qty <= low;
+
+    /// <summary>True when some is left and it expires on or before the given day.</summary>
+    public bool ExpiresBy(DateOnly day) => !IsOut && Expiry is { } e && e <= day;
+
+    /// <summary>Changes the expiry, place and low level; blanks clear them.</summary>
+    public void SetDetails(DateOnly? expiry, string? location, decimal? lowAt)
+    {
+        var place = string.IsNullOrWhiteSpace(location) ? null : location.Trim();
+        if (place is { Length: > MaxLocationLength }) throw new DomainException($"Use a place name of up to {MaxLocationLength} characters.");
+        if (lowAt < 0) throw new DomainException("The low level cannot be negative.");
+        Expiry = expiry;
+        Location = place;
+        LowAt = lowAt is 0 ? null : lowAt;
+    }
+
     /// <summary>True when none is left.</summary>
     public bool IsOut => Qty <= 0;
 

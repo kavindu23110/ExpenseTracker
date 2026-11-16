@@ -148,7 +148,8 @@ public sealed class WhatsAppBillService(IStore<AppUser> users, IStore<WhatsAppMe
     public async Task ProcessAsync(WhatsAppInbound message, CancellationToken ct)
     {
         var sender = WhatsAppWebhook.NormaliseNumber(message.From);
-        if (!(await users.ListAsync(ct)).Any(u => u.WhatsAppNumber == sender)) return;
+        var member = (await users.ListAsync(ct)).FirstOrDefault(u => u.WhatsAppNumber == sender);
+        if (member is null) return;
         if (await handled.FindAsync(message.MessageId, ct) is not null) return;
         handled.Add(new WhatsAppMessage(message.MessageId));
         await handled.SaveAsync(ct);
@@ -167,7 +168,8 @@ public sealed class WhatsAppBillService(IStore<AppUser> users, IStore<WhatsAppMe
             var category = draft.Suggestion.Category;
             await filing.SaveAsync(new SaveBillRequest(
                 draft.Lang, draft.Merchant, draft.MerchantSi, draft.Address, draft.AddressSi, draft.BillNo, draft.Date, draft.Time,
-                draft.Payment, draft.PaymentSi, draft.Paid, draft.Amount, category, category, draft.FileName, draft.Items, draft.Charges), new UploadedFile(draft.FileName, data), ct);
+                draft.Payment, draft.PaymentSi, draft.Paid, draft.Amount, category, category, draft.FileName,
+                draft.Items.Select(i => i.Remembered ? i : i with { Category = null }).ToList(), draft.Charges, PaidBy: member.Name), new UploadedFile(draft.FileName, data), ct);
             reply = $"Saved Rs {draft.Amount:N2} at {draft.Merchant} under {category}.";
             if (draft.TotalMismatch) reply += $" The items add up to Rs {draft.ComputedTotal:N2}, so please check this bill in the app.";
         }

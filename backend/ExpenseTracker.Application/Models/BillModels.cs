@@ -3,7 +3,7 @@ using ExpenseTracker.Domain.Bills;
 namespace ExpenseTracker.Application.Models;
 
 /// <summary>A line item as sent over the API.</summary>
-public sealed record BillItemDto(string Name, string? NameSi, decimal Qty, decimal Price, string? Unit, decimal? MarkedPrice, string? MarketKey, decimal Amount, string? Category = null)
+public sealed record BillItemDto(string Name, string? NameSi, decimal Qty, decimal Price, string? Unit, decimal? MarkedPrice, string? MarketKey, decimal Amount, string? Category = null, bool Remembered = false)
 {
     /// <summary>Maps from the domain.</summary>
     public static BillItemDto From(BillItem i) => new(i.Name, i.NameSi, i.Qty, i.Price, i.Unit, i.MarkedPrice, i.MarketKey, i.LineAmount, i.Category);
@@ -29,10 +29,10 @@ public sealed record BillRowDto(int Id, string Merchant, string Category, bool S
 public sealed record BillDetailDto(
     int Id, string Lang, string Merchant, string? MerchantSi, string? Address, string? BillNo, string Category, string Date, string? Time,
     string? Payment, decimal? Paid, decimal? Change, decimal Subtotal, decimal Amount, decimal Saved, bool Scanned, string? FileName, string? FileContentType,
-    IReadOnlyList<BillItemDto> Items, IReadOnlyList<BillChargeDto> Charges);
+    IReadOnlyList<BillItemDto> Items, IReadOnlyList<BillChargeDto> Charges, string? PaidBy = null);
 
 /// <summary>A category suggestion as sent over the API.</summary>
-public sealed record EditBillRequest(string Merchant, string? Date, decimal Amount, IReadOnlyList<BillItemDto> Items);
+public sealed record EditBillRequest(string Merchant, string? Date, decimal Amount, IReadOnlyList<BillItemDto> Items, string? PaidBy = null);
 
 /// <summary>A new category for a saved bill.</summary>
 public sealed record ChangeBillCategoryRequest(string? Category);
@@ -50,7 +50,7 @@ public sealed record BillDraftDto(
 public sealed record SaveBillRequest(
     string Lang, string Merchant, string? MerchantSi, string? Address, string? AddressSi, string? BillNo, string? Date, string? Time,
     string? Payment, string? PaymentSi, decimal? Paid, decimal Amount, string Category, string SuggestedCategory, string? FileName,
-    IReadOnlyList<BillItemDto> Items, IReadOnlyList<BillChargeDto> Charges, bool Manual = false);
+    IReadOnlyList<BillItemDto> Items, IReadOnlyList<BillChargeDto> Charges, bool Manual = false, string? PaidBy = null);
 
 /// <summary>A file uploaded with a request.</summary>
 public sealed record UploadedFile(string FileName, byte[] Data);
